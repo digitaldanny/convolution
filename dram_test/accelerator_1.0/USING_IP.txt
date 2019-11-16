@@ -1,0 +1,15 @@
+To use these source files in the accelerator_1.0 IP in Vivado, create a COPY from 
+'./convolution/dram_test/accelerator_1.0/src' to your local 'accelerator_1.0/'
+directory.
+
+After a successful COPY, the IP's accerator_1.0 folder should include the following
+folders:
+
+accerator_0
+bd
+drivers
+example_designs
+hdl
+src
+xgui
+component.xml
