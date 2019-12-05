@@ -239,6 +239,10 @@ begin
     ----------------------------------------------------------------------
     -- Instantiate DMA controllers
 
+    -- comment this out and change entity name when wanting to test our dram_rd_ram0
+    -- HAVE TO USE COMPONENT AND SYNTAX BELOW WHEN IP IS GENERATED FOR US! (do not use work.entity_name)
+    -------------------------------------------------------------------------------
+    -------------------------------------------------------------------------------
     U_DRAM0_RD : dram_rd_ram0
         port map (
             -- user dma control signals
@@ -248,7 +252,7 @@ begin
             clear      => ram0_rd_clear,
             go         => ram0_rd_go,
             rd_en      => ram0_rd_rd_en,
-            stall      => C_0,
+            stall      => C_0,              -- stall signal not needed in this project
             start_addr => ram0_rd_addr,
             size       => ram0_rd_size,
             valid      => ram0_rd_valid,
@@ -262,6 +266,8 @@ begin
             dram_rd_data  => dram0_rd_data,
             dram_rd_valid => dram0_rd_valid,
             dram_rd_flush => dram0_rd_flush);
+            
+   ------------------------------------------------------------------------------------
 
 
     U_DRAM0_WR : dram_wr_ram0

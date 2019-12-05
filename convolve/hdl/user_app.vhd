@@ -24,7 +24,7 @@ begin
 -- kernel buffer(signal buffer entity)
 
     -- pipeline
-    U_DATAPATH: entity work.mult_add_tree
+    U_DATAPATH: entity work.mult_add_tree(unsigned_arch)
         generic port(
             num_inputs => ,
             input1_width => ,
