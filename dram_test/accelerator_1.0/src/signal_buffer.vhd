@@ -1,23 +1,95 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use work.user_pkg.all;
+use ieee.std_logic_unsigned.all;
 
 entity signal_buffer is
-  generic( width : positive)
-  port( clk      : in  std_logic;
+    generic(
+        width : positive;
+        size  : positive)
+    port( 
+        clk      : in  std_logic;
         rst      : in std_logic;
         en       : in std_logic;
         rd_en    : out std_logic;
         wr_en    : out  std_logic;
         full     : out std_logic;
         empty    : out  std_logic;
-        input    : in  std_logic;
-        output   : out std_logic);
+        output   : out std_logic_vector(size*width-1 downto 0));
 end signal_buffer;
-
 
 architecture STR of signal_buffer is
 
+    signal count: unsigned(width+1 downto 0);
+    type reg_array is array (0 to size-1) of std_logic_vector(width-1 downto 0);
+    signal output_array: reg_array;
+    signal empty, full_s, being_read  : std_logic;
+    signal count : unsigned;
+
 begin
 
+    process(clk rst)
+    begin
+        if (rst = '1') then
+
+            -- reset logic
+            count <= (others => '0'); 
+
+            for i in 0 to size-1 loop
+                output_array(i) <= (others => '0');
+            end loop;
+
+        elsif (rising_edge(clk)) then
+
+            if (en = '1') then
+
+                if (count < unsigned(size)) then
+
+                    count 	<= count + 1;
+                    empty < '1'; -- not full
+
+                    -- 16-bit input goes to first array element
+                    output_array(0) <= input;
+
+                    -- shift elements by 1 and last element gets shifted out
+                    -- this may need to be size-2, but that would always shift the entire array even when it's all 0's
+                    U_ARRAY: for i in 0 to count-1 generate 
+                        U_REG: entity work.delay
+                        generic map (
+                            cycles => 1, 
+                            width  => width,
+                            init => "0")
+                        port map (
+                            clk     => clk,
+                            rst     => rst,
+                            en      => en,
+                            input   => output_array(i),
+                            output  => output_array(i+1));
+                    end generate;
+
+                else
+
+                    -- reset count to 0
+                    count 	<= (others => '0');
+                    full_s <= '1'; -- count == 128
+                end if;
+            end if;
+        end if;
+    end process;
+
+
+    -- smart buffer is full, ready to send window
+    full <= full_s AND not(rd_en);
+
+
+    -- vectorize array because datapath needs std_logic_vector
+    process(output_array)
+    begin
+        for i in 0 to size-1 loop
+            -- stores entire window
+            output((i+1)*width-1 downto i*width) <= output_array(i);
+        end loop;
+    end process;
 
 end STR;
