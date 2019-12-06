@@ -24,7 +24,7 @@ end addr_gen;
 
 architecture BHV of addr_gen is
 
-  type state_type is (S_INIT, S_EXECUTE);
+  type state_type is (S_INIT, S_PREP, S_EXECUTE);
   signal state, next_state : state_type;
 
   signal size_reg, next_size_reg : unsigned(width downto 0);
@@ -64,7 +64,21 @@ begin  -- BHV
         next_addr_s <= std_logic_vector(to_unsigned(0, width+1));
         valid       <= '0';
 
-        if (go = '1' and dram_rdy = '1') then
+        if (go = '1') then
+          done          <= '0';
+		  next_state    <= S_PREP;
+        end if;
+		
+	  -- +=====+=====+=====+=====+=====+=====+=====+=====+=====+
+	  -- PREP: Done has been set and waiting in this state for 
+	  -- dram_rdy to be set high.
+	  -- +=====+=====+=====+=====+=====+=====+=====+=====+=====+	  
+	  when S_PREP =>
+
+        next_addr_s <= std_logic_vector(to_unsigned(0, width+1));
+        valid       <= '0';	  
+	  
+	    if (dram_rdy = '1') then
           done          <= '0';
 		  next_addr_s 	<= start_addr; -- first address is at the starting addr (12/5/19)
           next_size_reg <= unsigned(size);
