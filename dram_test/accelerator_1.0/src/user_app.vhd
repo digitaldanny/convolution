@@ -7,9 +7,6 @@ use work.user_pkg.all;
 use work.math_custom.all;
 
 entity user_app is
-    generic (
-        width: positive;
-        size : positive);
     port (
         clks   : in  std_logic_vector(NUM_CLKS_RANGE);
         rst    : in  std_logic;
@@ -76,13 +73,16 @@ architecture default of user_app is
 
     -------------------------------------------------------------------------------------------------------------------------------
     -- convolusion signals
-    signal sb_full  : std_logic;
-    signal sb_wr_en : std_logic;
-    signal sb_empty : std_logic;
-    signal valid_out_s : std_logic;
-    signal dp_out : std_logic_vector(width+clog2(size)-1 downto 0));
-    signal sb_out, kernel_out : std_logic_vector(size*width-1 downto 0);
-
+    signal sb_full_s, kernel_full_s : std_logic;
+    signal sb_wr_en_s : std_logic;
+    signal sb_rd_en_s, kernel_rd_en_s, valid_out_s : std_logic_vector(0 downto 0);
+    signal sb_empty_s : std_logic;
+    --signal padded_signal_size_s : std_logic_vector(C_SIGNAL_WIDTH+2*size-1 downto 0);
+    signal dp_out_s : std_logic_vector(C_SIGNAL_WIDTH+clog2(C_SIGNAL_WIDTH)-1 downto 0);
+    signal dp_out_clipped_s : std_logic_vector(RAM1_WR_DATA_RANGE);                     -- output to RAM1_WR
+    signal kernel_load_s, kernel_empty_s, kernel_loaded_s : std_logic;
+    signal kernel_data_s : std_logic_vector(SIGNAL_WIDTH_RANGE);                      -- output from memory map into kernel buffer
+    signal sb_out_s, kernel_out_s : std_logic_vector(C_SIGNAL_WIDTH*C_SIGNAL_WIDTH-1 downto 0);   -- output from both smart buffers
     -------------------------------------------------------------------------------------------------------------------------------
 
 begin
@@ -120,10 +120,20 @@ begin
             -- circuit interface from software
             go        => go,
             sw_rst    => sw_rst_s,
+
             size      => size,
+            --signal_size => size,
             ram0_rd_addr => ram0_rd_addr,
             ram1_wr_addr => ram1_wr_addr,
-            done      => done);
+
+            ---------------------------------------
+            -- convolution memory_map specific
+            --kernel_data => kernel_data_s,
+            --kernel_load => kernel_load_s,
+            --kernel_loaded => kernel_loaded_s,
+            ---------------------------------------
+
+            done => done);
 
     rst_s  <= rst or sw_rst_s;
     sw_rst <= sw_rst_s;
@@ -157,19 +167,22 @@ begin
     -- convolusion version (comment out DRAM_TEST version)
 
     -- control signals --
+    kernel_loaded_s <= not(kernel_empty_s); -- software can read and verify kernel is loaded
+
     -- RAM0 read
-    ram0_rd_rd_en_s <= ram0_rd_valid and not(sb_full);
-    ram0_rd_rd_en <= ram_rd_rd_en_s;
+    --ram0_rd_size <= padded_signal_size_s;
+    --ram0_rd_rd_en_s <= ram0_rd_valid and not(sb_full_s);
+    --ram0_rd_rd_en <= ram_rd_rd_en_s;
 
     -- signal buffer
-    sb_rd_en <= not(sb_empty) and ram1_wr_ready;
+    --sb_rd_en_s <= not(sb_empty_s) and ram1_wr_ready;
 
     -- anytime we read from input memory, we write into signal buffer. This only works
     -- because of first word fall through for max throughput
-    sb_wr_en <= ram0_rd_rd_en_s; 
+    --sb_wr_en_s <= ram0_rd_rd_en_s; 
 
-    ram1_wr_valid <= valid_out_s and ram1_wr_ready; 
-    ram1_wr_data <= dp_out;
+    --ram1_wr_valid <= valid_out_s and ram1_wr_ready; 
+    --ram1_wr_data <= dp_out_s;
 
 
 
@@ -182,18 +195,18 @@ begin
     -- signal buffer entity 
     U_SIG_BUFF: entity work.signal_buffer
         generic map(
-            width => width,
-            size  => size)
+            width => 4,
+            size  => 4)
         port map( 
             clk => clks(C_CLK_USER),
             rst => rst,
             en => '1', -- TODO may need to change later
-            rd_en => sb_rd_en,
-            wr_en => sb_wr_en,
-            full => sb_full,
-            empty => sb_empty,
+            rd_en => sb_rd_en_s(0),
+            wr_en => sb_wr_en_s,
+            full => sb_full_s,
+            empty => sb_empty_s,
             input => ram0_rd_data,
-            output => sb_out);
+            output => sb_out_s);
 
 
 
@@ -201,62 +214,49 @@ begin
     -- kernel buffer using signal buffer entity
     U_KERN_BUFF: entity work.signal_buffer
         generic map(
-            width => width,
-            size  => size)
+            width => 4,
+            size  => 4)
         port map( 
             clk => clks(C_CLK_USER),
             rst => rst,
-            en => '1', -- TODO may need to change later
-            rd_en => ,
-            wr_en => ,
-            full => ,
-            empty => ,
-            input => mmap_rd_data,
-            output => kernel_out);
+            en => '1',
+            rd_en => kernel_rd_en_s(0),
+            wr_en => kernel_load_s, -- causes a shift by one inside buffer
+            full => kernel_full_s,
+            empty => kernel_empty_s,
+            input => kernel_data_s,
+            output => kernel_out_s);
 
 
 
 
-    -- pipeline
+--    -- pipeline
     U_DATAPATH: entity work.mult_add_tree(unsigned_arch)
         generic map(
-            num_inputs => size,
-            input1_width => width,
-            input2_width => width)
+            num_inputs => C_SIGNAL_WIDTH,
+            input1_width => C_SIGNAL_WIDTH,
+            input2_width => C_SIGNAL_WIDTH)
         port map (
-            clk => clk,
+            clk => clks(C_CLK_USER),
             rst => rst,
             en => ram1_wr_ready, -- stalls the pipeline if output RAM is not ready
-            input1 => sb_out,
-            input2 => kernel_out,
-            output => dp_out);
-    end mult_add_tree;
+            input1 => sb_out_s,
+            input2 => kernel_out_s,
+            output => dp_out_s);
 
 
 
 
     -- clipping logic --
     -- if any bit above 16th is 1, output all 1's, else output lower 16 bits
-    if (dp_out(width to dp_out'range) > 0) then -- TODO this may not work
-        dp_out_clipped <= (others => '1');
-    else
-        dp_out_clipped <= dp_out(width-1 downto 0);
-
-
-
-
-    -- valid bit for datapath valid output
-    U_DELAY: entity work.delay
-        generic map(
-            cycles : 1 -- TODO ;
-            width  : 1;
-            init   "0");
-        port map(
-            clk => clks(C_CLK_USER),
-            rst => rst,
-            en => ram1_wr_ready,
-            input => sb_rd_en,
-            output => valid_out_s);
+--    process(dp_out_s)
+--    begin
+--        if (dp_out_s(C_SIGNAL_WIDTH to dp_out_s'range) > 0) then -- TODO this may not work
+--            dp_out_s <= (others => '1');                      -- set to all 1's
+--            dp_out_clipped_s <= dp_out_s(C_SIGNAL_WIDTH-1 downto 0);     -- clip size to 16 bits
+--        else
+--            dp_out_clipped_s <= dp_out_s(C_SIGNAL_WIDTH-1 downto 0);
+--    end process;
 
 
 

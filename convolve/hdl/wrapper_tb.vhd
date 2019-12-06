@@ -134,6 +134,7 @@ begin
         wait until rising_edge(clk0);
         clearMMAP;
 
+        -- add 0's to end of signal if testing small kernel with bigger kernel size
         for i in 0 to C_KERNEL_SIZE-1 loop
             -- send kernel
             mmap_wr_addr <= C_KERNEL_DATA_ADDR;

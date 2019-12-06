@@ -74,7 +74,8 @@ class Convolve : public App {
              const appWord_t *kernel, unsigned int kernelSize);
   void getOutput(appWord_t *output, unsigned int outputSize);
 
-  static const unsigned int MAX_KERNEL_SIZE = 128;
+  // change this back to 128 for final test
+  static const unsigned int MAX_KERNEL_SIZE = 4;
   // make sure to leave enough room for pre- and post-padding
   static const unsigned int MAX_SIGNAL_SIZE = (RAM_BYTES/sizeof(appWord_t))-2*(MAX_KERNEL_SIZE-1)*sizeof(appWord_t);
   static const unsigned int MAX_OUTPUT_SIZE = RAM_BYTES/sizeof(appWord_t);
