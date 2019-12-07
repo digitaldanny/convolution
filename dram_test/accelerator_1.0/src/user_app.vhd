@@ -74,8 +74,8 @@ architecture default of user_app is
     -------------------------------------------------------------------------------------------------------------------------------
     -- convolusion signals
     signal sb_full_s, kernel_full_s : std_logic;
-    signal sb_wr_en_s : std_logic;
-    signal sb_rd_en_s, kernel_rd_en_s, valid_out_s : std_logic_vector(0 downto 0);
+    signal sb_rd_en_s, sb_wr_en_s : std_logic;
+    signal kernel_rd_en_s, valid_out_s : std_logic_vector(0 downto 0);
     signal sb_empty_s : std_logic;
     --signal padded_signal_size_s : std_logic_vector(C_SIGNAL_WIDTH+2*size-1 downto 0);
     signal dp_out_s : std_logic_vector(C_SIGNAL_WIDTH+clog2(C_SIGNAL_WIDTH)-1 downto 0);
@@ -201,7 +201,7 @@ begin
             clk => clks(C_CLK_USER),
             rst => rst,
             en => '1', -- TODO may need to change later
-            rd_en => sb_rd_en_s(0),
+            rd_en => sb_rd_en_s,
             wr_en => sb_wr_en_s,
             full => sb_full_s,
             empty => sb_empty_s,
