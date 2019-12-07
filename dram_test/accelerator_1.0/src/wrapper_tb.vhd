@@ -45,7 +45,7 @@ architecture behavior of wrapper_tb is
     
 begin
 
-    UUT : entity work.wrapper
+    UUT : entity work.wrapper(SIM)
         port map (
             clks         => clks,
             rst          => rst,

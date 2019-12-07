@@ -48,7 +48,7 @@ architecture BHV of dma_rd_ram0 is
 			clk         : in  std_logic;
 			rst         : in  std_logic;
 			start_addr 	: in  std_logic_vector(width-1 downto 0);
-			size        : in  std_logic_vector(width downto 0);
+			size        : in  std_logic_vector(16 downto 0);
 			addr        : out std_logic_vector(width-1 downto 0);
 			
 			dram_rdy 	: in  std_logic; -- dram side 'go' signal
@@ -60,8 +60,8 @@ architecture BHV of dma_rd_ram0 is
 		);
 	end component;
 		
-	-- FIFO_32_PROG_FULL (change from fifo_32_placeholder -> fifo_32_prog_full during sim/synthesis)
-	component fifo_32_placeholder
+	--FIFO_32_PROG_FULL (change from fifo_32_placeholder -> fifo_32_prog_full during sim/synthesis)
+	component fifo_w32_r16_prog_full
 		port (
 			rst 	: in STD_LOGIC;
 			wr_clk 	: in STD_LOGIC;
@@ -113,7 +113,7 @@ architecture BHV of dma_rd_ram0 is
 	-- +=====+=====+=====+=====+=====+=====+=====+=====+=====+
 	
 	-- REGISTER SIGNALS
-	signal size_div2_r_s : std_logic_vector(16 downto 0); -- registered size 
+	signal size_r_s : std_logic_vector(16 downto 0); -- registered size 
 	signal start_addr_r : std_logic_vector(14 downto 0); -- registered start address
 	
 	-- HANDSHAKE SIGNALS
@@ -121,7 +121,7 @@ architecture BHV of dma_rd_ram0 is
 	signal ack_handshake_s   : std_logic;
 	
 	-- ADDR GENERATOR SIGNALS
-	signal addr_gen_done_s : std_logic; -- all addresses have been generated
+	signal addr_gen_done_s : std_logic; -- unused
 	
 	-- FIFO SIGNALS
 	signal fifo_prog_full_s	: std_logic;
@@ -131,6 +131,8 @@ architecture BHV of dma_rd_ram0 is
 	
 	-- MISC SIGNALS
 	signal size_div2_s : std_logic_vector(16 downto 0);
+	signal rstn_s : std_logic;
+	signal done_s : std_logic;
 	
 	-- +=====+=====+=====+=====+=====+=====+=====+=====+=====+
 	--                   CONSTANT DECLARATION
@@ -155,8 +157,8 @@ begin
 			clk    => user_clk,
 			rst    => rst,
 			en     => go,
-			input  => size_div2_s,
-			output => size_div2_r_s
+			input  => size,
+			output => size_r_s
 		);
 		
 	-- This register holds the 'start_addr' signal while the 'go' signal 
@@ -198,7 +200,7 @@ begin
 			clk       	=> dram_clk,   -- (In)
 			rst         => rst,        -- (In)
 			start_addr  => start_addr, -- (In)
-			size        => size_div2_r_s,     -- (In)
+			size        => size_r_s,     -- (In)
 			
 			addr        => dram_rd_addr, -- (Out)
 			
@@ -212,7 +214,8 @@ begin
 		
 	-- FIFO with programmable full flag. Automatically converts from 
 	-- 32 bit inputs to 16 bit outputs.
-	U_FIFO_32_PROG_FULL : fifo_32_placeholder
+	-- U_FIFO_32_PROG_FULL : fifo_32_placeholder
+	U_FIFO_32_PROG_FULL : fifo_w32_r16_prog_full
 		port map (
 			rst 		=> fifo_rst_s,
 			wr_clk 		=> dram_clk,
@@ -230,9 +233,8 @@ begin
 	--                          LOGIC 
 	-- +=====+=====+=====+=====+=====+=====+=====+=====+=====+
 	
-	-- Divide the size requested from RAM by 2 to handle conversion
-	-- from 32-bit values in RAM to 16-bit values in datapath.
-	size_div2_s <= std_logic_vector(shift_right(unsigned(size), 1));
+	done <= done_s;		-- controlled by P_DONE
+	rstn_s <= not(rst);	-- controlled by rst port
 	
 	-- User will know FIFO has data available when the empty flag
 	-- is false.
@@ -242,8 +244,8 @@ begin
 	-- the clear input is set.
 	fifo_rst_s <= rst or clear;
 	
-	-- clear is wired directly to flush to reset the RAM
-	dram_rd_flush <= clear;
+	-- clear/go are wired directly to flush to reset the RAM
+	dram_rd_flush <= (clear or go) and rstn_s;
 	
 	-- +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 	-- SUMMARY: 
@@ -251,35 +253,35 @@ begin
 	-- is complete when the number of 16 bit data words are read from 
 	-- the RAM.
 	-- +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
-	P_DONE : process(rst, user_clk, size_div2_r_s, rd_en)
+	P_DONE : process(rst, user_clk, size_r_s, rd_en)
 		variable counter_v 	: unsigned(16 downto 0);
 		variable usize_v 	: unsigned(16 downto 0);
-		variable done_v 	: std_logic;
 	begin
 		
-		done_v := '0'; -- default
-		usize_v := unsigned(size_div2_r_s);
+		done_s <= '0'; -- default
+		usize_v := unsigned(size_r_s);
 		
 		if (rst = '1') then
 			counter_v 	:= (others => '0');
-			done_v 		:= '0'; -- not required bc of default, just here for clarification.
+			done_s 		<= '0'; -- not required bc of default, just here for clarification.
 			
 		elsif (rising_edge(user_clk)) then
 			
 			if (counter_v = usize_v) then
 				-- DMA transfer is complete if the counter equals the requested size.
-				done_v := '1';
+				done_s <= '1';
+				counter_v := (others => '0');
 			else
 				-- only increment counter if the clock is rising and 
 				-- if the read enable was set.
+				done_s <= '0';
+				
 				if (rd_en = '1') then
 					counter_v := counter_v + to_unsigned(1, counter_v'length);
 				end if;
 			end if;
 			
 		end if;
-		
-		done <= done_v;
 		
 	end process;
 	

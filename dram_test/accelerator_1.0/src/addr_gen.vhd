@@ -11,7 +11,7 @@ entity addr_gen is
     clk         : in  std_logic;
     rst         : in  std_logic;
 	start_addr 	: in  std_logic_vector(width-1 downto 0);
-    size        : in  std_logic_vector(width downto 0);
+    size        : in  std_logic_vector(width+1 downto 0);
 	addr        : out std_logic_vector(width-1 downto 0);
 	
 	dram_rdy 	: in  std_logic; -- dram side 'go' signal (12/5/19)
@@ -27,10 +27,14 @@ architecture BHV of addr_gen is
   type state_type is (S_INIT, S_PREP, S_EXECUTE);
   signal state, next_state : state_type;
 
-  signal size_reg, next_size_reg : unsigned(width downto 0);
-  signal addr_s, next_addr_s     : std_logic_vector(width downto 0);
+  signal size_div2_s : std_logic_vector(width+1 downto 0);
+  signal size_reg, next_size_reg : unsigned(width+1 downto 0);
+  signal addr_s, next_addr_s     : std_logic_vector(width+1 downto 0);
 
 begin  -- BHV
+
+  -- convert from the 16-bit request size to the 32-bit RAM size
+  size_div2_s <= std_logic_vector(shift_right(unsigned(size), 1));
 
   process (clk, rst)
   begin
@@ -45,7 +49,7 @@ begin  -- BHV
     end if;
   end process;
 
-  process(addr_s, size_reg, size, state, go, stall)
+  process(addr_s, size_reg, size_div2_s, state, go, stall)
   begin
 
     next_state    <= state;
@@ -61,7 +65,7 @@ begin  -- BHV
 	  -- +=====+=====+=====+=====+=====+=====+=====+=====+=====+
       when S_INIT =>
 
-        next_addr_s <= std_logic_vector(to_unsigned(0, width+1));
+        next_addr_s <= std_logic_vector(to_unsigned(0, next_addr_s'length));
         valid       <= '0';
 
         if (go = '1') then
@@ -75,13 +79,13 @@ begin  -- BHV
 	  -- +=====+=====+=====+=====+=====+=====+=====+=====+=====+	  
 	  when S_PREP =>
 
-        next_addr_s <= std_logic_vector(to_unsigned(0, width+1));
+        next_addr_s <= std_logic_vector(to_unsigned(0, next_addr_s'length));
         valid       <= '0';	  
 	  
 	    if (dram_rdy = '1') then
           done          <= '0';
-		  next_addr_s 	<= start_addr; -- first address is at the starting addr (12/5/19)
-          next_size_reg <= unsigned(size);
+		  next_addr_s 	<= std_logic_vector(resize(unsigned(start_addr), next_addr_s'length)); -- first address is at the starting addr (12/5/19)
+          next_size_reg <= unsigned(size_div2_s);
           next_state    <= S_EXECUTE;
         end if;
 
