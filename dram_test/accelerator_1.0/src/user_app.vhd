@@ -5,6 +5,9 @@ use ieee.std_logic_1164.all;
 use work.config_pkg.all;
 use work.user_pkg.all;
 use work.math_custom.all;
+use ieee.numeric_std.all;
+use ieee.std_logic_unsigned.all;
+
 
 entity user_app is
     port (
@@ -63,6 +66,9 @@ end user_app;
 
 architecture default of user_app is
 
+    -- valid bit latency delay
+    constant valid_bit_delay : positive := clog2(C_KERNEL_SIZE+1);
+
     signal go        : std_logic;
     signal sw_rst_s  : std_logic;
     signal rst_s     : std_logic;
@@ -74,15 +80,15 @@ architecture default of user_app is
     -------------------------------------------------------------------------------------------------------------------------------
     -- convolusion signals
     signal sb_full_s, kernel_full_s : std_logic;
-    signal sb_rd_en_s, sb_wr_en_s : std_logic;
-    signal kernel_rd_en_s, valid_out_s : std_logic_vector(0 downto 0);
+    signal sb_wr_en_s : std_logic;
+    signal sb_rd_en_s, kernel_rd_en_s, valid_in_s, valid_out_s : std_logic_vector(0 downto 0);
     signal sb_empty_s : std_logic;
     --signal padded_signal_size_s : std_logic_vector(C_SIGNAL_WIDTH+2*size-1 downto 0);
     signal dp_out_s : std_logic_vector(C_SIGNAL_WIDTH+clog2(C_SIGNAL_WIDTH)-1 downto 0);
-    signal dp_out_clipped_s : std_logic_vector(RAM1_WR_DATA_RANGE);                     -- output to RAM1_WR
+    signal dp_out_clipped_s : std_logic_vector(RAM1_WR_DATA_RANGE);                                 -- output to RAM1_WR
     signal kernel_load_s, kernel_empty_s, kernel_loaded_s : std_logic;
-    signal kernel_data_s : std_logic_vector(SIGNAL_WIDTH_RANGE);                      -- output from memory map into kernel buffer
-    signal sb_out_s, kernel_out_s : std_logic_vector(C_SIGNAL_WIDTH*C_SIGNAL_WIDTH-1 downto 0);   -- output from both smart buffers
+    signal kernel_data_s : std_logic_vector(SIGNAL_WIDTH_RANGE);                                    -- output from memory map into kernel buffer
+    signal sb_out_s, kernel_out_s : std_logic_vector(C_SIGNAL_WIDTH*C_SIGNAL_WIDTH-1 downto 0);     -- output from both smart buffers
     -------------------------------------------------------------------------------------------------------------------------------
 
 begin
@@ -183,11 +189,7 @@ begin
 
     --ram1_wr_valid <= valid_out_s and ram1_wr_ready; 
     --ram1_wr_data <= dp_out_s;
-
-
-
-
-    -- memory map entity 
+    valid_in_s <= sb_rd_en_s; -- valid bit going into valid bit delay alongside datapath
 
 
 
@@ -195,13 +197,13 @@ begin
     -- signal buffer entity 
     U_SIG_BUFF: entity work.signal_buffer
         generic map(
-            width => 4,
-            size  => 4)
+            width => C_SIGNAL_WIDTH,
+            size  => C_KERNEL_SIZE)
         port map( 
             clk => clks(C_CLK_USER),
             rst => rst,
             en => '1', -- TODO may need to change later
-            rd_en => sb_rd_en_s,
+            rd_en => sb_rd_en_s(0),
             wr_en => sb_wr_en_s,
             full => sb_full_s,
             empty => sb_empty_s,
@@ -214,8 +216,8 @@ begin
     -- kernel buffer using signal buffer entity
     U_KERN_BUFF: entity work.signal_buffer
         generic map(
-            width => 4,
-            size  => 4)
+            width => C_SIGNAL_WIDTH,
+            size  => C_KERNEL_SIZE)
         port map( 
             clk => clks(C_CLK_USER),
             rst => rst,
@@ -230,10 +232,26 @@ begin
 
 
 
+        -- datapath valid bit
+        U_VALID_DP: entity work.delay
+        generic map(
+            cycles => valid_bit_delay,
+            width  => 1,
+            init => "0")
+        port map(
+            clk => clks(C_CLK_USER),
+            rst => rst,
+            en => ram1_wr_ready,
+            input => valid_in_s,
+            output => valid_out_s);
+
+
+
+
 --    -- pipeline
     U_DATAPATH: entity work.mult_add_tree(unsigned_arch)
         generic map(
-            num_inputs => C_SIGNAL_WIDTH,
+            num_inputs => C_KERNEL_SIZE,
             input1_width => C_SIGNAL_WIDTH,
             input2_width => C_SIGNAL_WIDTH)
         port map (
@@ -249,18 +267,14 @@ begin
 
     -- clipping logic --
     -- if any bit above 16th is 1, output all 1's, else output lower 16 bits
---    process(dp_out_s)
---    begin
---        if (dp_out_s(C_SIGNAL_WIDTH to dp_out_s'range) > 0) then -- TODO this may not work
---            dp_out_s <= (others => '1');                      -- set to all 1's
---            dp_out_clipped_s <= dp_out_s(C_SIGNAL_WIDTH-1 downto 0);     -- clip size to 16 bits
---        else
---            dp_out_clipped_s <= dp_out_s(C_SIGNAL_WIDTH-1 downto 0);
---    end process;
-
-
-
-
-    -- maybe control
+    process(dp_out_s)
+    begin
+        if (unsigned(dp_out_s(2*C_SIGNAL_WIDTH+clog2(C_SIGNAL_WIDTH)-1 downto C_SIGNAL_WIDTH))) > 0 then
+            dp_out_s <= (others => '1');                                 -- set to all 1's
+            dp_out_clipped_s <= dp_out_s(C_SIGNAL_WIDTH-1 downto 0);     -- clip size to 16 bits
+        else
+            dp_out_clipped_s <= dp_out_s(C_SIGNAL_WIDTH-1 downto 0);
+        end if;
+    end process;
 
 end default;
