@@ -51,6 +51,7 @@ architecture BHV of dma_rd_ram0 is
 			size        : in  std_logic_vector(16 downto 0);
 			addr        : out std_logic_vector(width-1 downto 0);
 			
+			flush 		: out std_logic;
 			dram_rdy 	: in  std_logic; -- dram side 'go' signal
 			go          : in  std_logic; -- user side 'go' signal
 			stall       : in  std_logic;
@@ -132,8 +133,12 @@ architecture BHV of dma_rd_ram0 is
 	
 	-- MISC SIGNALS
 	signal size_div2_s : std_logic_vector(16 downto 0);
-	signal rstn_s : std_logic;
 	signal done_s : std_logic;
+	signal still_valid_s : std_logic;
+	
+	-- DEBUG PROBES
+	signal debug_counter_s : std_logic_vector(16 downto 0);
+	signal debug_next_counter_s : std_logic_vector(16 downto 0);
 	
 	-- +=====+=====+=====+=====+=====+=====+=====+=====+=====+
 	--                   CONSTANT DECLARATION
@@ -205,6 +210,7 @@ begin
 			
 			addr        => dram_rd_addr, -- (Out)
 			
+			flush 		=> dram_rd_flush,
 			dram_rdy 	=> dram_ready, -- dram side 'go' signal (Out)
 			go          => go_synchronized_s, -- user side 'go' signal (In)
 			stall       => fifo_prog_full_s, -- (In)
@@ -215,7 +221,7 @@ begin
 		
 	-- FIFO with programmable full flag. Automatically converts from 
 	-- 32 bit inputs to 16 bit outputs.
-	-- U_FIFO_32_PROG_FULL : fifo_32_placeholder
+	--U_FIFO_32_PROG_FULL : fifo_32_placeholder
 	U_FIFO_32_PROG_FULL : fifo_w32_r16_prog_full
 		port map (
 			rst 		=> fifo_rst_s,
@@ -235,7 +241,6 @@ begin
 	-- +=====+=====+=====+=====+=====+=====+=====+=====+=====+
 	
 	done <= done_s;		-- controlled by P_DONE
-	rstn_s <= not(rst);	-- controlled by rst port
 	
 	-- fifo flips MSWord and LSWord in resize.. Flipping the words on input
 	-- will fix that issue.
@@ -243,14 +248,11 @@ begin
 	
 	-- User will know FIFO has data available when the empty flag
 	-- is false.
-	valid <= not(fifo_empty_s);
+	valid <= (not(fifo_empty_s)) and still_valid_s;
 	
 	-- Fifo contents should be cleared when system is reset OR when
 	-- the clear input is set.
 	fifo_rst_s <= rst or clear;
-	
-	-- clear/go are wired directly to flush to reset the RAM
-	dram_rd_flush <= (clear or go) and rstn_s;
 	
 	-- +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 	-- SUMMARY: 
@@ -263,12 +265,11 @@ begin
 		variable usize_v 	: unsigned(16 downto 0);
 	begin
 		
-		done_s <= '0'; -- default
-		usize_v := unsigned(size_r_s);
+		usize_v       := unsigned(size_r_s);
 		
 		if (rst = '1') then
-			counter_v 	:= (others => '0');
-			done_s 		<= '0'; -- not required bc of default, just here for clarification.
+			counter_v 	    := (others => '0');
+			done_s 		    <= '0'; -- not required bc of default, just here for clarification.
 			
 		elsif (rising_edge(user_clk)) then
 			
@@ -285,9 +286,50 @@ begin
 					counter_v := counter_v + to_unsigned(1, counter_v'length);
 				end if;
 			end if;
-			
+		
 		end if;
 		
+		debug_next_counter_s <= std_logic_vector(counter_v);
+		
+	end process;
+	
+	-- +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+	-- SUMMARY: (Asynchronous)
+	-- If this process senses a new 'go' signal, it will set the valid
+	-- signal high until it sees a new 'done' assertion. It will then
+	-- wait until the next 'go' signal.
+	-- +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+	P_VALID : process(rst, go_synchronized_s, done_s)
+	begin
+		if (rst = '1') then
+
+			still_valid_s <= '0';
+		
+		else
+		   
+			if (rising_edge(go_synchronized_s)) then
+				still_valid_s <= '1';
+			end if;
+				
+			if (rising_edge(done_s)) then
+				still_valid_s <= '0';
+			end if;
+		   
+		end if;
+	end process;
+	
+	-- +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+	-- SUMMARY: 
+	-- This debugging process is used to tell what the current counter
+	-- value for asserting the 'done' signal is.
+	-- +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+	P_DEBUG : process(rst, user_clk, debug_next_counter_s)
+	begin
+	   if (rst = '1') then
+	       debug_counter_s <= (others => '0');
+	   elsif (rising_edge(user_clk)) then
+	       debug_counter_s <= debug_next_counter_s;
+	   end if;
 	end process;
 	
 end BHV;

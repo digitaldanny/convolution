@@ -14,6 +14,7 @@ entity addr_gen is
     size        : in  std_logic_vector(width+1 downto 0);
 	addr        : out std_logic_vector(width-1 downto 0);
 	
+	flush 		: out std_logic; -- used to flush the DRAM
 	dram_rdy 	: in  std_logic; -- dram side 'go' signal (12/5/19)
     go          : in  std_logic; -- user side 'go' signal
     stall       : in  std_logic;
@@ -27,6 +28,7 @@ architecture BHV of addr_gen is
   type state_type is (S_INIT, S_PREP, S_EXECUTE);
   signal state, next_state : state_type;
 
+  signal flush_s, next_flush_s : std_logic;
   signal size_div2_s : std_logic_vector(width+1 downto 0);
   signal size_reg, next_size_reg : unsigned(width+1 downto 0);
   signal addr_s, next_addr_s     : std_logic_vector(width+1 downto 0);
@@ -35,6 +37,7 @@ begin  -- BHV
 
   -- convert from the 16-bit request size to the 32-bit RAM size
   size_div2_s <= std_logic_vector(shift_right(unsigned(size), 1));
+  flush <= flush_s;
 
   process (clk, rst)
   begin
@@ -42,10 +45,12 @@ begin  -- BHV
       addr_s   <= (others => '0');
       size_reg <= (others => '0');
       state    <= S_INIT;
+	  flush_s  <= '0';
     elsif (clk'event and clk = '1') then
       addr_s   <= next_addr_s;
       size_reg <= next_size_reg;
       state    <= next_state;
+	  flush_s  <= next_flush_s;
     end if;
   end process;
 
@@ -55,7 +60,9 @@ begin  -- BHV
     next_state    <= state;
     next_addr_s   <= addr_s;
     next_size_reg <= size_reg;
-    done          <= '1';
+	
+    done <= '1';
+	next_flush_s <= '0';
 
     case state is
 	
@@ -69,6 +76,7 @@ begin  -- BHV
         valid       <= '0';
 
         if (go = '1') then
+		  next_flush_s  <= '1';
           done          <= '0';
 		  next_state    <= S_PREP;
         end if;
@@ -104,6 +112,7 @@ begin  -- BHV
         done  <= '0';
 
         if (unsigned(addr_s) = size_reg) then
+		  next_flush_s <= '1';
           done        <= '1';
           next_state  <= S_INIT;
         elsif (stall = '0') then
