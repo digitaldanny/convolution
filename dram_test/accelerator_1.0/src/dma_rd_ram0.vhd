@@ -124,6 +124,7 @@ architecture BHV of dma_rd_ram0 is
 	signal addr_gen_done_s : std_logic; -- unused
 	
 	-- FIFO SIGNALS
+	signal dram_rd_data_flipped_s : std_logic_vector(31 downto 0);
 	signal fifo_prog_full_s	: std_logic;
 	signal fifo_empty_s 	: std_logic;
 	signal fifo_full_s		: std_logic; -- unused
@@ -220,7 +221,7 @@ begin
 			rst 		=> fifo_rst_s,
 			wr_clk 		=> dram_clk,
 			rd_clk 		=> user_clk,
-			din 		=> dram_rd_data,
+			din 		=> dram_rd_data_flipped_s,
 			wr_en 		=> dram_rd_valid,
 			rd_en 		=> rd_en,
 			dout 		=> data,
@@ -235,6 +236,10 @@ begin
 	
 	done <= done_s;		-- controlled by P_DONE
 	rstn_s <= not(rst);	-- controlled by rst port
+	
+	-- fifo flips MSWord and LSWord in resize.. Flipping the words on input
+	-- will fix that issue.
+	dram_rd_data_flipped_s <= dram_rd_data(15 downto 0) & dram_rd_data(31 downto 16);
 	
 	-- User will know FIFO has data available when the empty flag
 	-- is false.
