@@ -23,7 +23,13 @@ entity wrapper is
         );
 end wrapper;
 
-architecture default of wrapper is
+-- +=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+
+-- Architecture Summary: SYNTH
+-- This architecture is used for synthesis. It uses the custom
+-- DMA_RD_0 entity and the 3 EDN entities for the remaining dram
+-- components.
+-- +=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+
+architecture SYNTH of wrapper is
 
     ----------------------------------------------------------
     -- DMA interface signals
@@ -89,7 +95,8 @@ architecture default of wrapper is
 
     signal sw_rst, rst_s : std_logic;
 
-    component dram_rd_ram0
+    --component dram_rd_ram0 -- original edn file
+    component dma_rd_ram0 -- custom component
         port(dram_clk   : in  std_logic;
              user_clk   : in  std_logic;
              rst        : in  std_logic;
@@ -239,7 +246,8 @@ begin
     ----------------------------------------------------------------------
     -- Instantiate DMA controllers
 
-    U_DRAM0_RD : dram_rd_ram0
+    --U_DRAM0_RD : dram_rd_ram0
+	U_DRAM0_RD : dma_rd_ram0
         port map (
             -- user dma control signals
             dram_clk   => clks(C_CLK_DRAM),
@@ -381,4 +389,281 @@ begin
             rd_valid   => dram1_rd_valid,
             rd_flush   => dram1_rd_flush);
 
-end default;
+end SYNTH;
+
+-- +=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+
+-- Architecture Summary: SIM
+-- This architecture is used for simulations. It uses the sim 
+-- components for the DRAM_RD/WR which are located in the work
+-- library.
+-- +=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+
+architecture SIM of wrapper is
+
+    ----------------------------------------------------------
+    -- DMA interface signals
+    signal ram0_rd_rd_en : std_logic;
+    signal ram0_rd_clear : std_logic;
+    signal ram0_rd_go    : std_logic;
+    signal ram0_rd_valid : std_logic;
+    signal ram0_rd_data  : std_logic_vector(RAM0_RD_DATA_RANGE);
+    signal ram0_rd_addr  : std_logic_vector(RAM0_ADDR_RANGE);
+    signal ram0_rd_size  : std_logic_vector(RAM0_RD_SIZE_RANGE);
+    signal ram0_rd_done  : std_logic;
+
+    signal ram0_wr_ready : std_logic;
+    signal ram0_wr_clear : std_logic;
+    signal ram0_wr_go    : std_logic;
+    signal ram0_wr_valid : std_logic;
+    signal ram0_wr_data  : std_logic_vector(RAM0_WR_DATA_RANGE);
+    signal ram0_wr_addr  : std_logic_vector(RAM0_ADDR_RANGE);
+    signal ram0_wr_size  : std_logic_vector(RAM0_WR_SIZE_RANGE);
+    signal ram0_wr_done  : std_logic;
+
+    signal ram1_rd_rd_en : std_logic;
+    signal ram1_rd_clear : std_logic;
+    signal ram1_rd_go    : std_logic;
+    signal ram1_rd_valid : std_logic;
+    signal ram1_rd_data  : std_logic_vector(RAM1_RD_DATA_RANGE);
+    signal ram1_rd_addr  : std_logic_vector(RAM1_ADDR_RANGE);
+    signal ram1_rd_size  : std_logic_vector(RAM1_RD_SIZE_RANGE);
+    signal ram1_rd_done  : std_logic;
+
+    signal ram1_wr_ready : std_logic;
+    signal ram1_wr_clear : std_logic;
+    signal ram1_wr_go    : std_logic;
+    signal ram1_wr_valid : std_logic;
+    signal ram1_wr_data  : std_logic_vector(RAM1_WR_DATA_RANGE);
+    signal ram1_wr_addr  : std_logic_vector(RAM1_ADDR_RANGE);
+    signal ram1_wr_size  : std_logic_vector(RAM1_WR_SIZE_RANGE);
+    signal ram1_wr_done  : std_logic;
+
+    ----------------------------------------------------------
+    -- physical memory signals
+    signal dram0_ready      : std_logic;
+    signal dram0_wr_en      : std_logic;
+    signal dram0_wr_addr    : std_logic_vector(DRAM0_ADDR_RANGE);
+    signal dram0_wr_data    : std_logic_vector(DRAM0_DATA_RANGE);
+    signal dram0_wr_pending : std_logic;
+    signal dram0_rd_en      : std_logic;
+    signal dram0_rd_addr    : std_logic_vector(DRAM0_ADDR_RANGE);
+    signal dram0_rd_data    : std_logic_vector(DRAM0_DATA_RANGE);
+    signal dram0_rd_valid   : std_logic;
+    signal dram0_rd_flush   : std_logic;
+
+    signal dram1_ready      : std_logic;
+    signal dram1_wr_en      : std_logic;
+    signal dram1_wr_addr    : std_logic_vector(DRAM1_ADDR_RANGE);
+    signal dram1_wr_data    : std_logic_vector(DRAM1_DATA_RANGE);
+    signal dram1_wr_pending : std_logic;
+    signal dram1_rd_en      : std_logic;
+    signal dram1_rd_addr    : std_logic_vector(DRAM1_ADDR_RANGE);
+    signal dram1_rd_data    : std_logic_vector(DRAM1_DATA_RANGE);
+    signal dram1_rd_valid   : std_logic;
+    signal dram1_rd_flush   : std_logic;
+
+    signal sw_rst, rst_s : std_logic;
+
+begin
+
+    rst_s <= rst or sw_rst;
+
+    ----------------------------------------------------------------------
+    -- Instantiate the main user application
+
+    U_USER_APP : entity work.user_app
+        port map (
+            clks   => clks,
+            rst    => rst,
+            sw_rst => sw_rst,
+
+            mmap_wr_en   => mmap_wr_en,
+            mmap_wr_addr => mmap_wr_addr,
+            mmap_wr_data => mmap_wr_data,
+            mmap_rd_en   => mmap_rd_en,
+            mmap_rd_addr => mmap_rd_addr,
+            mmap_rd_data => mmap_rd_data,
+
+            ram0_rd_rd_en => ram0_rd_rd_en,
+            ram0_rd_clear => ram0_rd_clear,
+            ram0_rd_go    => ram0_rd_go,
+            ram0_rd_valid => ram0_rd_valid,
+            ram0_rd_data  => ram0_rd_data,
+            ram0_rd_addr  => ram0_rd_addr,
+            ram0_rd_size  => ram0_rd_size,
+            ram0_rd_done  => ram0_rd_done,
+
+            ram0_wr_ready => ram0_wr_ready,
+            ram0_wr_clear => ram0_wr_clear,
+            ram0_wr_go    => ram0_wr_go,
+            ram0_wr_valid => ram0_wr_valid,
+            ram0_wr_data  => ram0_wr_data,
+            ram0_wr_addr  => ram0_wr_addr,
+            ram0_wr_size  => ram0_wr_size,
+            ram0_wr_done  => ram0_wr_done,
+
+            ram1_rd_rd_en => ram1_rd_rd_en,
+            ram1_rd_clear => ram1_rd_clear,
+            ram1_rd_go    => ram1_rd_go,
+            ram1_rd_valid => ram1_rd_valid,
+            ram1_rd_data  => ram1_rd_data,
+            ram1_rd_addr  => ram1_rd_addr,
+            ram1_rd_size  => ram1_rd_size,
+            ram1_rd_done  => ram1_rd_done,
+
+            ram1_wr_ready => ram1_wr_ready,
+            ram1_wr_clear => ram1_wr_clear,
+            ram1_wr_go    => ram1_wr_go,
+            ram1_wr_valid => ram1_wr_valid,
+            ram1_wr_data  => ram1_wr_data,
+            ram1_wr_addr  => ram1_wr_addr,
+            ram1_wr_size  => ram1_wr_size,
+            ram1_wr_done  => ram1_wr_done
+            );
+
+    ----------------------------------------------------------------------
+    -- Instantiate DMA controllers
+
+    --U_DRAM0_RD : entity work.dram_rd_ram0_0
+	U_DRAM0_RD : entity work.dma_rd_ram0
+        port map (
+            -- user dma control signals
+            dram_clk   => clks(C_CLK_DRAM),
+            user_clk   => clks(C_CLK_USER),
+            rst        => rst_s,
+            clear      => ram0_rd_clear,
+            go         => ram0_rd_go,
+            rd_en      => ram0_rd_rd_en,
+            stall      => C_0,
+            start_addr => ram0_rd_addr,
+            size       => ram0_rd_size,
+            valid      => ram0_rd_valid,
+            data       => ram0_rd_data,
+            done       => ram0_rd_done,
+
+            -- dram control signals
+            dram_ready    => dram0_ready,
+            dram_rd_en    => dram0_rd_en,
+            dram_rd_addr  => dram0_rd_addr,
+            dram_rd_data  => dram0_rd_data,
+            dram_rd_valid => dram0_rd_valid,
+            dram_rd_flush => dram0_rd_flush);
+
+
+    U_DRAM0_WR : entity work.dram_wr_ram0_0
+        port map (
+                                        -- user dma control signals
+            dram_clk   => clks(C_CLK_DRAM),
+            user_clk   => clks(C_CLK_USER),
+            rst        => rst_s,
+            clear      => ram0_wr_clear,
+            go         => ram0_wr_go,
+            wr_en      => ram0_wr_valid,
+            start_addr => ram0_wr_addr,
+            size       => ram0_wr_size,
+            data       => ram0_wr_data,
+            done       => ram0_wr_done,
+            ready      => ram0_wr_ready,
+
+                                        -- dram control signals
+            dram_ready      => dram0_ready,
+            dram_wr_en      => dram0_wr_en,
+            dram_wr_addr    => dram0_wr_addr,
+            dram_wr_data    => dram0_wr_data,
+            dram_wr_pending => dram0_wr_pending);
+
+
+    U_DRAM1_RD : entity work.dram_rd_ram1_0
+        port map (
+                                        -- user dma control signals 
+            dram_clk   => clks(C_CLK_DRAM),
+            user_clk   => clks(C_CLK_USER),
+            rst        => rst_s,
+            clear      => ram1_rd_clear,
+            go         => ram1_rd_go,
+            rd_en      => ram1_rd_rd_en,
+            stall      => C_0,
+            start_addr => ram1_rd_addr,
+            size       => ram1_rd_size,
+            valid      => ram1_rd_valid,
+            data       => ram1_rd_data,
+            done       => ram1_rd_done,
+
+                                        -- dram control signals
+            dram_ready    => dram1_ready,
+            dram_rd_en    => dram1_rd_en,
+            dram_rd_addr  => dram1_rd_addr,
+            dram_rd_data  => dram1_rd_data,
+            dram_rd_valid => dram1_rd_valid,
+            dram_rd_flush => dram1_rd_flush);
+
+
+    U_DRAM1_WR : entity work.dram_wr_ram1_0
+        port map (
+                                        -- user dma control signals
+            dram_clk   => clks(C_CLK_DRAM),
+            user_clk   => clks(C_CLK_USER),
+            rst        => rst_s,
+            clear      => ram1_wr_clear,
+            go         => ram1_wr_go,
+            wr_en      => ram1_wr_valid,
+            start_addr => ram1_wr_addr,
+            size       => ram1_wr_size,
+            data       => ram1_wr_data,
+            done       => ram1_wr_done,
+            ready      => ram1_wr_ready,
+
+                                        -- dram control signals
+            dram_ready      => dram1_ready,
+            dram_wr_en      => dram1_wr_en,
+            dram_wr_addr    => dram1_wr_addr,
+            dram_wr_data    => dram1_wr_data,
+            dram_wr_pending => dram1_wr_pending);
+
+
+    ----------------------------------------------------------------------
+    -- Create the DRAM models
+    -- Note that there are no DRAMs inside the FPGA. This code actually uses
+    -- SRAMs, but does so in a way that mimics the latency and refresh of a
+    -- DRAM. 
+
+    U_DRAM0 : entity work.dram_model
+        generic map (
+            num_words          => 2**C_DRAM0_ADDR_WIDTH,
+            word_width         => C_DRAM0_DATA_WIDTH,
+            addr_width         => C_DRAM0_ADDR_WIDTH,
+            wr_only_when_ready => false)
+        port map (
+            clk        => clks(C_CLK_DRAM),
+            rst        => rst_s,
+            ready      => dram0_ready,
+            wr_en      => dram0_wr_en,
+            wr_addr    => dram0_wr_addr,
+            wr_data    => dram0_wr_data,
+            wr_pending => dram0_wr_pending,
+            rd_en      => dram0_rd_en,
+            rd_addr    => dram0_rd_addr,
+            rd_data    => dram0_rd_data,
+            rd_valid   => dram0_rd_valid,
+            rd_flush   => dram0_rd_flush);
+
+    U_DRAM1 : entity work.dram_model
+        generic map (
+            num_words  => 2**C_DRAM1_ADDR_WIDTH,
+            word_width => C_DRAM1_DATA_WIDTH,
+            addr_width => C_DRAM1_ADDR_WIDTH,
+            rd_latency => 1)
+        port map (
+            clk        => clks(C_CLK_DRAM),
+            rst        => rst_s,
+            ready      => dram1_ready,
+            wr_en      => dram1_wr_en,
+            wr_addr    => dram1_wr_addr,
+            wr_data    => dram1_wr_data,
+            wr_pending => dram1_wr_pending,
+            rd_en      => dram1_rd_en,
+            rd_addr    => dram1_rd_addr,
+            rd_data    => dram1_rd_data,
+            rd_valid   => dram1_rd_valid,
+            rd_flush   => dram1_rd_flush);
+
+end SIM;
