@@ -23,7 +23,9 @@ end signal_buffer;
 
 architecture STR of signal_buffer is
 
-    constant max_bits : positive := clog2(2**size+1);
+    --constant max_bits : positive := clog2(2**size+1);
+    constant max_bits : positive := clog2(C_KERNEL_SIZE+1); -- size won't work here
+    
 	signal count: unsigned(max_bits-1 downto 0);
 	
     type reg_array is array (0 to size-1) of std_logic_vector(width-1 downto 0);

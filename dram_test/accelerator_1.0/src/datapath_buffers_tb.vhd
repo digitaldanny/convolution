@@ -11,8 +11,8 @@ end datapath_buffers_tb;
 
 architecture TB of datapath_buffers_tb is
 
-    constant width : integer  := 4;
-    constant size : integer := 4;
+    constant width : integer  := 8;
+    constant size : integer := 8;
     
     -- valid bit latency delay
     constant valid_bit_delay : positive := clog2(size+1);
@@ -26,7 +26,7 @@ architecture TB of datapath_buffers_tb is
     signal valid_in_s, valid_out_s : std_logic;
     signal input : std_logic_vector(width-1 downto 0); 
     signal sb_out_s, kernel_out_s : std_logic_vector(size*width-1 downto 0);
-    signal dp_out_s : std_logic_vector(2*width+clog2(size)-1 downto 0);
+    signal dp_out_s : std_logic_vector(2*width+clog2(size)-1 downto 0) := (others => '0');
     signal sim_done : std_logic := '0';
 
 begin
@@ -106,6 +106,7 @@ begin
         rd_en <= '0';
         wr_en <= '0';
         ram1_wr_ready <= '0';
+        valid_in_s <= '0';
         
 
         -- wait for 500 ns;
@@ -136,6 +137,7 @@ begin
         wr_en <= '0';
         -- start datapath
         ram1_wr_ready <= '1';
+        valid_in_s <= '1';
         
         -- let output stabilize
         for i in 0 to 20 loop

@@ -87,55 +87,55 @@ begin  -- STR
 end unsigned_arch;
 
 
-architecture signed_arch of mult_add_tree is
+--architecture signed_arch of mult_add_tree is
 
-  constant PRODUCT_WIDTH : positive := input1_width+input2_width;
+--  constant PRODUCT_WIDTH : positive := input1_width+input2_width;
 
-  type input1_array is array(integer range<>) of std_logic_vector(input1_width-1 downto 0);
-  type input2_array is array(integer range<>) of std_logic_vector(input2_width-1 downto 0);
-  type mult_array is array(integer range<>) of std_logic_vector(PRODUCT_WIDTH-1 downto 0);
+--  type input1_array is array(integer range<>) of std_logic_vector(input1_width-1 downto 0);
+--  type input2_array is array(integer range<>) of std_logic_vector(input2_width-1 downto 0);
+--  type mult_array is array(integer range<>) of std_logic_vector(PRODUCT_WIDTH-1 downto 0);
 
-  signal product     : mult_array(0 to num_inputs-1);
-  signal in1         : input1_array(0 to num_inputs-1);
-  signal in2         : input2_array(0 to num_inputs-1);
-  signal add_tree_in : std_logic_vector(num_inputs*PRODUCT_WIDTH-1 downto 0);
+--  signal product     : mult_array(0 to num_inputs-1);
+--  signal in1         : input1_array(0 to num_inputs-1);
+--  signal in2         : input2_array(0 to num_inputs-1);
+--  signal add_tree_in : std_logic_vector(num_inputs*PRODUCT_WIDTH-1 downto 0);
   
-begin  -- STR
+--begin  -- STR
 
-  -- convert input vectors into arrays of data
-  U_DEVECTORIZE : for i in 0 to num_inputs-1 generate
-    in1(i) <= input1((i+1)*input1_width-1 downto i*input1_width);
-    in2(i) <= input2((i+1)*input2_width-1 downto i*input2_width);
-  end generate;
+--  -- convert input vectors into arrays of data
+--  U_DEVECTORIZE : for i in 0 to num_inputs-1 generate
+--    in1(i) <= input1((i+1)*input1_width-1 downto i*input1_width);
+--    in2(i) <= input2((i+1)*input2_width-1 downto i*input2_width);
+--  end generate;
 
-  -- calculate products
-  U_MULT : for i in 0 to num_inputs-1 generate
-    -- a pipelined multiplier
-    process(clk)
-    begin
-      if (rising_edge(clk)) then
-        if (en = '1') then
-          product(i) <= std_logic_vector(signed(in1(i))*signed(in2(i)));
-        end if;
-      end if;
-    end process;
-  end generate U_MULT;
+--  -- calculate products
+--  U_MULT : for i in 0 to num_inputs-1 generate
+--    -- a pipelined multiplier
+--    process(clk)
+--    begin
+--      if (rising_edge(clk)) then
+--        if (en = '1') then
+--          product(i) <= std_logic_vector(signed(in1(i))*signed(in2(i)));
+--        end if;
+--      end if;
+--    end process;
+--  end generate U_MULT;
 
-  -- put adder tree inputs into a big vector (i.e., "vectorize")
-  U_VECTORIZE : for i in 0 to num_inputs-1 generate
-    add_tree_in((i+1)*PRODUCT_WIDTH-1 downto i*PRODUCT_WIDTH) <= product(i);
-  end generate;
+--  -- put adder tree inputs into a big vector (i.e., "vectorize")
+--  U_VECTORIZE : for i in 0 to num_inputs-1 generate
+--    add_tree_in((i+1)*PRODUCT_WIDTH-1 downto i*PRODUCT_WIDTH) <= product(i);
+--  end generate;
 
-  -- sum all differences
-  U_ADD_TREE : entity work.add_tree(signed_arch)
-    generic map (
-      num_inputs => num_inputs,
-      data_width => PRODUCT_WIDTH)
-    port map (
-      clk    => clk,
-      rst    => rst,
-      en     => en,
-      input  => add_tree_in,
-      output => output);
+--  -- sum all differences
+--  U_ADD_TREE : entity work.add_tree(signed_arch)
+--    generic map (
+--      num_inputs => num_inputs,
+--      data_width => PRODUCT_WIDTH)
+--    port map (
+--      clk    => clk,
+--      rst    => rst,
+--      en     => en,
+--      input  => add_tree_in,
+--      output => output);
 
-end signed_arch;
+--end signed_arch;
