@@ -68,6 +68,7 @@ architecture default of user_app is
 
     -- valid bit latency delay
     constant valid_bit_delay : positive := clog2(C_KERNEL_SIZE)+1;
+    --constant valid_bit_delay : positive := 2*clog2(C_KERNEL_SIZE)+1;
 
     signal go        : std_logic;
     signal sw_rst_s  : std_logic;
@@ -180,8 +181,8 @@ begin
     ram0_rd_rd_en <= ram0_rd_rd_en_s;
 
     -- signal buffer
-    --sb_rd_en_s <= not(sb_empty_s) and ram1_wr_ready;
-    sb_rd_en_s <= sb_full_s and ram1_wr_ready;
+    sb_rd_en_s <= not(sb_empty_s) and ram1_wr_ready;
+    --sb_rd_en_s <= sb_full_s and ram1_wr_ready;        -- Daniel added
 
     -- anytime we read from input memory, we write into signal buffer. This only works
     -- because of first word fall through for max throughput
