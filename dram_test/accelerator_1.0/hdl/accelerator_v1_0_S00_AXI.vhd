@@ -324,7 +324,7 @@ begin
     mmap_rst <= not S_AXI_ARESETN;
     clks <= fclk3 & fclk2 & fclk1 & fclk0;
     
-    U_WRAPPER : entity work.wrapper port map (
+    U_WRAPPER : entity work.wrapper(SYNTH) port map (
 
         clks => clks,
         rst => mmap_rst,

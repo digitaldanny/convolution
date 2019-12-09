@@ -36,50 +36,31 @@ architecture TRANSITIONAL of handshake is
   signal send_s, ack_s : std_logic;
   signal send_delayed_s, ack_delayed_s: std_logic;
   
-<<<<<<< HEAD
-=======
   constant C_1 : std_logic := '1';
   
->>>>>>> master
 begin
 
   -----------------------------------------------------------------------------
   -- add dual-flop syncs for SEND and ACK
   
-<<<<<<< HEAD
   U_SENDER : entity work.dual_flop(STR)
-=======
-  U_SENDER : entity work.dual_flop
->>>>>>> master
 	port map (
 		clk_src  => clk_src,	-- clkA = sender clk
         clk_dest => clk_dest,	-- clkB = receiver clk
         rst_src  => rst,
         rst_dest => rst,
-<<<<<<< HEAD
-        en       => '1',
-=======
         en       => C_1,
->>>>>>> master
         input    => send_s,
         output   => send_delayed_s
 	);
 	
-<<<<<<< HEAD
   U_RECEIVER : entity work.dual_flop(STR)
-=======
-  U_RECEIVER : entity work.dual_flop
->>>>>>> master
 	port map (
 		clk_src  => clk_dest,	-- clkA = receiver clk
         clk_dest => clk_src,	-- clkB = sender clk
         rst_src  => rst,
         rst_dest => rst,
-<<<<<<< HEAD
-        en       => '1',
-=======
         en       => C_1,
->>>>>>> master
         input    => ack_s,
         output   => ack_delayed_s
 	);
