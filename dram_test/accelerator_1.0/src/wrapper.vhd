@@ -523,8 +523,8 @@ begin
     ----------------------------------------------------------------------
     -- Instantiate DMA controllers
 
-    U_DRAM0_RD : entity work.dram_rd_ram0_0
-	--U_DRAM0_RD : entity work.dma_rd_ram0
+    --U_DRAM0_RD : entity work.dram_rd_ram0_0
+	U_DRAM0_RD : entity work.dma_rd_ram0
         port map (
             -- user dma control signals
             dram_clk   => clks(C_CLK_DRAM),
