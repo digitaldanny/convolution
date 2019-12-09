@@ -95,8 +95,12 @@ architecture SYNTH of wrapper is
 
     signal sw_rst, rst_s : std_logic;
 
+<<<<<<< HEAD
+    component dram_rd_ram0_0
+=======
     --component dram_rd_ram0 -- original edn file
     component dma_rd_ram0 -- custom component
+>>>>>>> master
         port(dram_clk   : in  std_logic;
              user_clk   : in  std_logic;
              rst        : in  std_logic;
@@ -119,7 +123,7 @@ architecture SYNTH of wrapper is
              );
     end component;
 
-    component dram_rd_ram1
+    component dram_rd_ram1_0
         port(dram_clk   : in  std_logic;
              user_clk   : in  std_logic;
              rst        : in  std_logic;
@@ -142,7 +146,7 @@ architecture SYNTH of wrapper is
              );
     end component;
 
-    component dram_wr_ram0
+    component dram_wr_ram0_0
         port(dram_clk   : in  std_logic;
              user_clk   : in  std_logic;
              rst        : in  std_logic;
@@ -164,7 +168,7 @@ architecture SYNTH of wrapper is
     end component;
 
 
-    component dram_wr_ram1
+    component dram_wr_ram1_0
         port(dram_clk   : in  std_logic;
              user_clk   : in  std_logic;
              rst        : in  std_logic;
@@ -246,8 +250,16 @@ begin
     ----------------------------------------------------------------------
     -- Instantiate DMA controllers
 
+<<<<<<< HEAD
+    -- comment this out and change entity name when wanting to test our dram_rd_ram0
+    -- HAVE TO USE COMPONENT AND SYNTAX BELOW WHEN IP IS GENERATED FOR US! (do not use work.entity_name)
+    -------------------------------------------------------------------------------
+    -------------------------------------------------------------------------------
+    U_DRAM0_RD : dram_rd_ram0_0
+=======
     --U_DRAM0_RD : dram_rd_ram0
 	U_DRAM0_RD : dma_rd_ram0
+>>>>>>> master
         port map (
             -- user dma control signals
             dram_clk   => clks(C_CLK_DRAM),
@@ -256,7 +268,7 @@ begin
             clear      => ram0_rd_clear,
             go         => ram0_rd_go,
             rd_en      => ram0_rd_rd_en,
-            stall      => C_0,
+            stall      => C_0,              -- stall signal not needed in this project
             start_addr => ram0_rd_addr,
             size       => ram0_rd_size,
             valid      => ram0_rd_valid,
@@ -270,9 +282,11 @@ begin
             dram_rd_data  => dram0_rd_data,
             dram_rd_valid => dram0_rd_valid,
             dram_rd_flush => dram0_rd_flush);
+            
+   ------------------------------------------------------------------------------------
 
 
-    U_DRAM0_WR : dram_wr_ram0
+    U_DRAM0_WR : dram_wr_ram0_0
         port map (
                                         -- user dma control signals
             dram_clk   => clks(C_CLK_DRAM),
@@ -295,7 +309,7 @@ begin
             dram_wr_pending => dram0_wr_pending);
 
 
-    U_DRAM1_RD : dram_rd_ram1
+    U_DRAM1_RD : dram_rd_ram1_0
         port map (
                                         -- user dma control signals 
             dram_clk   => clks(C_CLK_DRAM),
@@ -320,7 +334,7 @@ begin
             dram_rd_flush => dram1_rd_flush);
 
 
-    U_DRAM1_WR : dram_wr_ram1
+    U_DRAM1_WR : dram_wr_ram1_0
         port map (
                                         -- user dma control signals
             dram_clk   => clks(C_CLK_DRAM),

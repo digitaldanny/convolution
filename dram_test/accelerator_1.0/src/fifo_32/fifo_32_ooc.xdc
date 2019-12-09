@@ -1,4 +1,4 @@
-# (c) Copyright 2012-2015 Xilinx, Inc. All rights reserved.
+# (c) Copyright 2012-2019 Xilinx, Inc. All rights reserved.
 # 
 # This file contains confidential and proprietary information
 # of Xilinx, Inc. and is protected under U.S. and
@@ -53,9 +53,7 @@
 
 
 create_clock -period 10 -name wr_clk [get_ports wr_clk]
-set_property HD.CLK_SRC BUFGCTRL_X0Y0 [get_ports wr_clk]
 
 create_clock -period 10 -name rd_clk [get_ports rd_clk]
-set_property HD.CLK_SRC BUFGCTRL_X0Y1 [get_ports rd_clk]
 
 
