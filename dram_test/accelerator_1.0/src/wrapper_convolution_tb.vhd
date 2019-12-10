@@ -121,11 +121,11 @@ begin
         -----------------------------------------------------------------------------------------------------------
         addr_count := 0;
 
-       -- pad F's at the beginning of signal
+       -- pad 1's at the beginning of signal
        for i in 0 to (C_KERNEL_SIZE/2)-1 loop
            mmap_wr_addr <= std_logic_vector(to_unsigned(i, C_MMAP_ADDR_WIDTH));
            mmap_wr_en   <= '1';
-           mmap_wr_data <= std_logic_vector(to_unsigned(15, C_MMAP_DATA_WIDTH/2) & to_unsigned(15, C_MMAP_DATA_WIDTH/2));
+           mmap_wr_data <= std_logic_vector(to_unsigned(1, C_MMAP_DATA_WIDTH/2) & to_unsigned(1, C_MMAP_DATA_WIDTH/2));
            addr_count := addr_count + 1; 
 
             for j in 0 to C_MMAP_CYCLES-1 loop
@@ -196,7 +196,6 @@ begin
 
         done  := '0';
         count := 0;
-       
 
         -- read the done signal every cycle to see if the circuit has
         -- completed.
