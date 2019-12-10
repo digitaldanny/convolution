@@ -67,7 +67,7 @@ begin
 
                     -- start address of ram0_rd and ram1_wr
                     ram0_rd_addr <= std_logic_vector(to_unsigned(0, C_RAM0_ADDR_WIDTH));
-                    ram1_wr_addr <= std_logic_vector(to_unsigned(0,RAM1_ADDR_RANGE));
+                    ram1_wr_addr <= std_logic_vector(to_unsigned(0, C_RAM1_ADDR_WIDTH));
                     mem_out_go  <= '1';
                     next_done_s <= '0';
                     done        <= '0';  -- make sure done updated immediately

@@ -24,10 +24,11 @@ end signal_buffer;
 architecture STR of signal_buffer is
 
     type reg_array is array (0 to size-1) of std_logic_vector(width-1 downto 0);
-    constant max_bits : positive : = clog2(C_KERNEL_SIZE+1);
+    signal output_array: reg_array;
+    constant max_bits : positive := clog2(C_KERNEL_SIZE+1);
 
 	signal count      : unsigned(max_bits-1 downto 0);
-    signal empty_s    : std_logic
+    signal empty_s    : std_logic;
     signal full_s     : std_logic;
 
 begin
@@ -65,7 +66,7 @@ begin
                         output_array(i+1) <= output_array(i);
                     end loop;
 
-                elsif (rd_en = '1' and count = to_unsigned(size, max_bits)) then
+                elsif (rd_en = '1' and (count = to_unsigned(size, max_bits))) then
 
                     -- decrement since we can read 1 more element
                     count <= count - 1;
