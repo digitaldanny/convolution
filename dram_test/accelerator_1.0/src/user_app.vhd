@@ -99,6 +99,8 @@ architecture default of user_app is
     signal dp_out_clipped_s : std_logic_vector(RAM1_WR_DATA_RANGE);                                 -- output to RAM1_WR
     signal sb_out_s         : std_logic_vector(C_SIGNAL_WIDTH*C_KERNEL_SIZE-1 downto 0);
     signal kernel_out_s     : std_logic_vector(C_SIGNAL_WIDTH*C_KERNEL_SIZE-1 downto 0);     -- output from both smart buffers
+    signal sb_out_delayed_s         : std_logic_vector(C_SIGNAL_WIDTH*C_KERNEL_SIZE-1 downto 0);
+    signal kernel_out_delayed_s     : std_logic_vector(C_SIGNAL_WIDTH*C_KERNEL_SIZE-1 downto 0);     -- output from both smart buffers
     -------------------------------------------------------------------------------------------------------------------------------
 
 begin
@@ -154,8 +156,9 @@ begin
             go            => go,
             mem_in_go     => ram0_rd_go,
             --ram0_rd_done => ram0_rd_done, I don't think this is needed
-            --ram0_rd_addr  => ram0_rd_addr,
-            --ram1_wr_addr  => ram1_wr_addr,
+            --ram1_wr_done => ram1_wr_done,
+            ram0_rd_addr  => ram0_rd_addr,
+            ram1_wr_addr  => ram1_wr_addr,
             mem_out_go    => ram1_wr_go,
             mem_in_clear  => ram0_rd_clear,
             mem_out_clear => ram1_wr_clear,
@@ -186,8 +189,9 @@ begin
     ram1_wr_valid <= dp_valid_out_s and ram1_wr_ready; 
     ram1_wr_data <= dp_out_clipped_s;
     
+    
     dp_valid_in_s <= sb_rd_en_s;
-    dp_en <= ram1_wr_ready;
+    dp_en <= ram1_wr_ready; -- delay this signal using and
 
 
 
@@ -242,6 +246,32 @@ begin
             output(0) => dp_valid_out_s);
 
 
+        -- sb delay
+        U_SIGNAL_DELAY: entity work.delay
+        generic map(
+            cycles => C_KERNEL_SIZE,
+            width  => C_SIGNAL_WIDTH*C_KERNEL_SIZE,
+            init => "0")
+        port map(
+            clk => clks(C_CLK_USER),
+            rst => rst,
+            en => '1',
+            input => sb_out_s,
+            output => sb_out_delayed_s);
+
+
+        -- kernel delay
+        U_KERNEL_DELAY: entity work.delay
+        generic map(
+            cycles => C_KERNEL_SIZE,
+            width  => C_SIGNAL_WIDTH*C_KERNEL_SIZE,
+            init => "0")
+        port map(
+            clk => clks(C_CLK_USER),
+            rst => rst,
+            en => '1',
+            input => kernel_out_s,
+            output => kernel_out_delayed_s);
 
 
 ----    -- pipeline
@@ -254,8 +284,8 @@ begin
             clk => clks(C_CLK_USER),
             rst => rst,
             en => dp_en, -- stalls the pipeline if output RAM is not ready
-            input1 => kernel_out_s,
-            input2 => sb_out_s,
+            input1 => kernel_out_delayed_s,
+            input2 => sb_out_delayed_s,
             output => dp_out_s);
       
 

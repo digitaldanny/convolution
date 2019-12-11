@@ -25,7 +25,7 @@ use ieee.std_logic_1164.all;
 -- output : The input after "cycles" pass (assuming no stalls from en='0')
 -------------------------------------------------------------------------------
 
-entity delay is
+entity reg is
   generic(cycles :     natural;
           width  :     positive;
           init   :     std_logic_vector);
@@ -34,7 +34,7 @@ entity delay is
         en       : in  std_logic;
         input    : in  std_logic_vector(width-1 downto 0);
         output   : out std_logic_vector(width-1 downto 0));
-end delay;
+end reg;
 
 
 architecture FF of delay is
@@ -50,7 +50,7 @@ begin  -- BHV
     begin
       if (rst = '1') then
         for i in 0 to cycles-1 loop
-          regs(i) <= (others => '0');
+           regs(i) <= (others => '0');
         end loop;
       elsif (clk'event and clk = '1') then
 

@@ -235,7 +235,7 @@ begin
         end loop;  -- i
 
 
-        -- send size
+        -- send reset
         mmap_wr_addr <= C_RST_ADDR;
         mmap_wr_en   <= '1';
         mmap_wr_data <= std_logic_vector(to_unsigned(1, C_MMAP_DATA_WIDTH));

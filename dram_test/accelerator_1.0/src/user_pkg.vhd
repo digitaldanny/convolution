@@ -41,7 +41,7 @@ package user_pkg is
     ----------------------------------------------------------------------------------------------------------
 
     -- convolusion specific constants and ranges------------------------------------------------------------------------
-    constant C_KERNEL_SIZE           : positive := 4;  -- change to smaller value while testing     -- default 128
+    constant C_KERNEL_SIZE           : positive := 128;  -- change to smaller value while testing     -- default 128
     constant C_KERNEL_WIDTH          : positive := 16; -- bit width of kernel                        -- default 16
     constant C_MAX_SIGNAL_SIZE       : positive := 2**(C_RAM1_ADDR_WIDTH+1);
     constant C_MAX_SIGNAL_SIZE_WIDTH : positive := C_RAM0_RD_SIZE_WIDTH;
