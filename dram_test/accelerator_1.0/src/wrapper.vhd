@@ -96,10 +96,8 @@ architecture SYNTH of wrapper is
     signal sw_rst, rst_s : std_logic;
 
 
-    --component dram_rd_ram0_0
-
-    --component dram_rd_ram0 -- original edn file
-    component dma_rd_ram0 -- custom component
+    component dram_rd_ram0 -- original edn file
+    --component dma_rd_ram0 -- custom component
 
         port(dram_clk   : in  std_logic;
              user_clk   : in  std_logic;
@@ -257,10 +255,8 @@ begin
     -------------------------------------------------------------------------------
    
    
-  -- U_DRAM0_RD : dram_rd_ram0_0
-
-    --U_DRAM0_RD : dram_rd_ram0
-	U_DRAM0_RD : dma_rd_ram0
+    U_DRAM0_RD : dram_rd_ram0
+	--U_DRAM0_RD : dma_rd_ram0
 
         port map (
             -- user dma control signals
@@ -415,8 +411,8 @@ end SYNTH;
 -- +=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+
 architecture SIM of wrapper is
 
-    --component dram_rd_ram0 -- original edn file
-    component dma_rd_ram0 -- custom component
+    component dram_rd_ram0_0 -- original edn file
+    --component dma_rd_ram0 -- custom component
 
         port(dram_clk   : in  std_logic;
              user_clk   : in  std_logic;
@@ -630,8 +626,8 @@ begin
     ----------------------------------------------------------------------
     -- Instantiate DMA controllers
 
-    --U_DRAM0_RD : entity work.dram_rd_ram0_0
-	U_DRAM0_RD : dma_rd_ram0
+    U_DRAM0_RD : entity work.dram_rd_ram0_0
+	--U_DRAM0_RD : dma_rd_ram0
         port map (
             -- user dma control signals
             dram_clk   => clks(C_CLK_DRAM),

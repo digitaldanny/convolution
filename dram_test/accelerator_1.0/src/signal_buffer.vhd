@@ -12,7 +12,6 @@ entity signal_buffer is
     port( 
         clk      : in std_logic;
         rst      : in std_logic;
-        en       : in std_logic;
         rd_en    : in std_logic;
         wr_en    : in std_logic;
         full     : out std_logic;
@@ -23,20 +22,19 @@ end signal_buffer;
 
 architecture STR of signal_buffer is
 
-    --constant max_bits : positive := clog2(2**size+1);
-    constant max_bits : positive := clog2(C_KERNEL_SIZE+1); -- size won't work here
-    
-	signal count: unsigned(max_bits-1 downto 0);
-	
     type reg_array is array (0 to size-1) of std_logic_vector(width-1 downto 0);
     signal output_array: reg_array;
-    --signal output_array: window(0 to size-1); -- uses the array from within user_pkg
-    signal empty_s, full_s: std_logic;
+    constant max_bits : positive := clog2(C_KERNEL_SIZE+1);
+
+	signal count      : unsigned(max_bits-1 downto 0);
+    signal empty_s    : std_logic;
+    signal full_s     : std_logic;
 
 begin
 
     process(clk, rst)
     begin
+
         if (rst = '1') then
 
             -- reset logic
@@ -44,55 +42,62 @@ begin
             empty_s <= '1';
             full_s <= '0';
 
+            -- clear each index in array
             for i in 0 to size-1 loop
                 output_array(i) <= (others => '0');
             end loop;
 
         elsif (rising_edge(clk)) then
 
-            if (en = '1') then
+            -- reads data into buffer and shifts
+            -- if wr_en and rd_en asserted, wr_en gets priority 
+            if (wr_en = '1') then
 
-                -- reads data into buffer and shifts
-                if (wr_en = '1' and (count < to_unsigned(size, width))) then -- TODO double check width is correct
-
-                    empty_s <= '1'; -- not full
+                -- count is less that size, so update count and shift elements
+                if (count < to_unsigned(size, max_bits)) then
                     count <= count + 1;
+                    empty_s <= '1'; -- not full
+                    full_s <= '0';
 
                     -- input goes to first array element
                     output_array(0) <= input;
 
                     -- shift elements by 1 and last element gets shifted out
-                    -- this may need to be size-2, but that would always shift the entire array even when it's all 0's
                     for i in 0 to size-2 loop
                         output_array(i+1) <= output_array(i);
                     end loop;
 
-                elsif (rd_en = '1' and count = to_unsigned(size, max_bits)) then
+                -- count == 128
+                elsif (count = to_unsigned(size, max_bits)) then
+                    empty_s <= '0';
+                    full_s <= '1';
 
+                end if;
+
+            elsif (rd_en = '1') then
+                if (count <= to_unsigned(size, max_bits)) then
+                    -- decrement since we can read 1 more element
                     count <= count - 1;
                     empty_s <= '1';
                     full_s <= '0';
-
-                elsif (count = to_unsigned(size, max_bits)) then
-
-                    empty_s <= '0';
-                    full_s <= '1'; -- count == 128
-                    
                 end if;
             end if;
         end if;
     end process;
 
-
-    -- smart buffer is full, ready to send window
-    --full <= full_s and not(rd_en);
-    full <= full_s;
     empty <= empty_s;
+
+    -- if rd_en is asserted, then buffer will never be full since
+    -- it reads and writes a window in the same cycle
+    full <= full_s and not(rd_en); 
     
+
+
+
     -- vectorize array because datapath needs std_logic_vector
     U_OUTPUT_VECTOR : for i in 0 to size-1 generate
-            -- stores entire window
-            output((i+1)*width-1 downto i*width) <= output_array(i);
+        -- stores entire window
+        output((i+1)*width-1 downto i*width) <= output_array(i);
     end generate;
 
 end STR;

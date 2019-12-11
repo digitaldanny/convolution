@@ -68,29 +68,39 @@ architecture default of user_app is
 
     -- valid bit latency delay
     constant valid_bit_delay : positive := clog2(C_KERNEL_SIZE)+1;
-    --constant valid_bit_delay : positive := 2*clog2(C_KERNEL_SIZE)+1;
 
-    signal go        : std_logic;
-    signal sw_rst_s  : std_logic;
-    signal rst_s     : std_logic;
-    signal size      : std_logic_vector(RAM0_RD_SIZE_RANGE);
-    signal ram0_rd_addr_s : std_logic_vector(RAM0_ADDR_RANGE);
---    signal ram1_wr_addr : std_logic_vector(RAM1_ADDR_RANGE);
-    signal done      : std_logic;
+    signal go            : std_logic;
+    signal sw_rst_s      : std_logic;
+    signal rst_s         : std_logic;
+    signal unpadded_size : std_logic_vector(RAM0_RD_SIZE_RANGE);
+    signal done          : std_logic;
 
     -------------------------------------------------------------------------------------------------------------------------------
     -- convolusion signals
-    signal sb_full_s, kernel_full_s : std_logic;
-    signal sb_wr_en_s : std_logic;
-    signal sb_rd_en_s, kernel_rd_en_s, valid_in_s, valid_out_s : std_logic;
-    signal sb_empty_s : std_logic;
+    signal sb_empty_s      : std_logic;
+    signal sb_full_s       : std_logic;
+    signal sb_rd_en_s      : std_logic;
+    signal sb_wr_en_s      : std_logic;
+
+    signal kernel_empty_s  : std_logic;
+    signal kernel_full_s   : std_logic;
+    signal kernel_rd_en_s  : std_logic;
+    signal kernel_data_s   : std_logic_vector(SIGNAL_WIDTH_RANGE); -- output from memory map into kernel buffer
+    signal kernel_load_s   : std_logic;
+    signal kernel_loaded_s : std_logic;
+
+    signal dp_en           : std_logic;
+    signal dp_valid_in_s   : std_logic;
+    signal dp_valid_out_s  : std_logic;
     signal ram0_rd_rd_en_s : std_logic;
 
-    signal dp_out_s, dp_out_s_tmp : std_logic_vector(2*C_SIGNAL_WIDTH+clog2(C_KERNEL_SIZE)-1 downto 0);
+    signal dp_out_s         : std_logic_vector(2*C_SIGNAL_WIDTH+clog2(C_KERNEL_SIZE)-1 downto 0);
+    signal dp_out_s_tmp     : std_logic_vector(2*C_SIGNAL_WIDTH+clog2(C_KERNEL_SIZE)-1 downto 0);
     signal dp_out_clipped_s : std_logic_vector(RAM1_WR_DATA_RANGE);                                 -- output to RAM1_WR
-    signal kernel_load_s, kernel_empty_s, kernel_loaded_s : std_logic;
-    signal kernel_data_s : std_logic_vector(SIGNAL_WIDTH_RANGE);                                    -- output from memory map into kernel buffer
-    signal sb_out_s, kernel_out_s : std_logic_vector(C_SIGNAL_WIDTH*C_KERNEL_SIZE-1 downto 0);     -- output from both smart buffers
+    signal sb_out_s         : std_logic_vector(C_SIGNAL_WIDTH*C_KERNEL_SIZE-1 downto 0);
+    signal kernel_out_s     : std_logic_vector(C_SIGNAL_WIDTH*C_KERNEL_SIZE-1 downto 0);     -- output from both smart buffers
+    signal sb_out_delayed_s         : std_logic_vector(C_SIGNAL_WIDTH*C_KERNEL_SIZE-1 downto 0);
+    signal kernel_out_delayed_s     : std_logic_vector(C_SIGNAL_WIDTH*C_KERNEL_SIZE-1 downto 0);     -- output from both smart buffers
     -------------------------------------------------------------------------------------------------------------------------------
 
 begin
@@ -128,19 +138,12 @@ begin
             -- circuit interface from software
             go        => go,
             sw_rst    => sw_rst_s,
+            signal_size => unpadded_size,
 
-            signal_size => size,
-
-            --ram0_rd_addr => ram0_rd_addr,
-            --ram1_wr_addr => ram1_wr_addr,
-
-            ---------------------------------------
-            -- convolution memory_map specific
             kernel_data => kernel_data_s,
             kernel_load => kernel_load_s,
             kernel_loaded => kernel_loaded_s,
             ---------------------------------------
-
             done => done);
 
     rst_s  <= rst or sw_rst_s;
@@ -152,47 +155,43 @@ begin
             rst           => rst_s,
             go            => go,
             mem_in_go     => ram0_rd_go,
+            --ram0_rd_done => ram0_rd_done, I don't think this is needed
+            --ram1_wr_done => ram1_wr_done,
             ram0_rd_addr  => ram0_rd_addr,
+            ram1_wr_addr  => ram1_wr_addr,
             mem_out_go    => ram1_wr_go,
             mem_in_clear  => ram0_rd_clear,
             mem_out_clear => ram1_wr_clear,
             mem_out_done  => ram1_wr_done,
             done          => done);
 
---    ram0_rd_addr  <= ram0_rd_addr;
-    ram1_wr_size  <= size;
---    ram1_wr_addr  <= ram1_rd_addr;
-    --ram1_wr_data  <= ram0_rd_data;
-
-
-
 
     ---------------------------------------------------------------------------------------------------------------------------------------------
-
-    -- convolusion version (comment out DRAM_TEST version)
 
     -- control signals --
     kernel_loaded_s <= not(kernel_empty_s); -- software can read and verify kernel is loaded
 
-    -- RAM0 read
     -- read size including padded 0's
-    ram0_rd_size <= size + 2*C_KERNEL_SIZE-1;
+    ram0_rd_size <= unpadded_size + 2*C_KERNEL_SIZE-1;
+
+    -- TODO verify this size, but should be amount of unique windows 
+    ram1_wr_size  <= unpadded_size+C_KERNEL_SIZE-1;
+
+    -- only works because of first word fall through
     ram0_rd_rd_en_s <= ram0_rd_valid and not(sb_full_s);
     ram0_rd_rd_en <= ram0_rd_rd_en_s;
 
-    -- signal buffer
+    -- anytime we read from input memory, we write into signal buffer.
     sb_rd_en_s <= not(sb_empty_s) and ram1_wr_ready;
-    --sb_rd_en_s <= sb_full_s and ram1_wr_ready;        -- Daniel added
-
-    -- anytime we read from input memory, we write into signal buffer. This only works
-    -- because of first word fall through for max throughput
     sb_wr_en_s <= ram0_rd_rd_en_s; 
 
     -- output of user_app into ram1_wr
-    ram1_wr_valid <= valid_out_s and ram1_wr_ready; 
+    ram1_wr_valid <= dp_valid_out_s and ram1_wr_ready; 
     ram1_wr_data <= dp_out_clipped_s;
     
-    valid_in_s <= sb_rd_en_s; -- valid bit going into valid bit delay alongside datapath
+    
+    dp_valid_in_s <= sb_rd_en_s;
+    dp_en <= ram1_wr_ready; -- delay this signal using and
 
 
 
@@ -205,7 +204,6 @@ begin
         port map( 
             clk => clks(C_CLK_USER),
             rst => rst,
-            en => '1', -- TODO may need to change later
             rd_en => sb_rd_en_s,
             wr_en => sb_wr_en_s,
             full => sb_full_s,
@@ -224,7 +222,6 @@ begin
         port map( 
             clk => clks(C_CLK_USER),
             rst => rst,
-            en => '1',
             rd_en => kernel_rd_en_s,
             wr_en => kernel_load_s, -- causes a shift by one inside buffer
             full => kernel_full_s,
@@ -244,11 +241,37 @@ begin
         port map(
             clk => clks(C_CLK_USER),
             rst => rst,
-            en => ram1_wr_ready,
-            input(0) => valid_in_s,
-            output(0) => valid_out_s);
+            en => dp_en,
+            input(0) => dp_valid_in_s,
+            output(0) => dp_valid_out_s);
 
 
+        -- sb delay
+        U_SIGNAL_DELAY: entity work.delay
+        generic map(
+            cycles => C_KERNEL_SIZE,
+            width  => C_SIGNAL_WIDTH*C_KERNEL_SIZE,
+            init => "0")
+        port map(
+            clk => clks(C_CLK_USER),
+            rst => rst,
+            en => '1',
+            input => sb_out_s,
+            output => sb_out_delayed_s);
+
+
+        -- kernel delay
+        U_KERNEL_DELAY: entity work.delay
+        generic map(
+            cycles => C_KERNEL_SIZE,
+            width  => C_SIGNAL_WIDTH*C_KERNEL_SIZE,
+            init => "0")
+        port map(
+            clk => clks(C_CLK_USER),
+            rst => rst,
+            en => '1',
+            input => kernel_out_s,
+            output => kernel_out_delayed_s);
 
 
 ----    -- pipeline
@@ -260,9 +283,9 @@ begin
         port map (
             clk => clks(C_CLK_USER),
             rst => rst,
-            en => ram1_wr_ready, -- stalls the pipeline if output RAM is not ready
-            input1 => sb_out_s,
-            input2 => kernel_out_s,
+            en => dp_en, -- stalls the pipeline if output RAM is not ready
+            input1 => kernel_out_delayed_s,
+            input2 => sb_out_delayed_s,
             output => dp_out_s);
       
 
@@ -272,9 +295,9 @@ begin
 --    -- if any bit above 16th is 1, output all 1's, else output lower 16 bits
     process(dp_out_s)
     begin
-        if (unsigned(dp_out_s(2*C_SIGNAL_WIDTH+clog2(C_KERNEL_SIZE)-1 downto C_SIGNAL_WIDTH))) > 0 then   -- fix range
-            dp_out_s_tmp <= (others => '1');                                                                    -- set to all 1's
-            dp_out_clipped_s <= dp_out_s_tmp(C_SIGNAL_WIDTH-1 downto 0);             -- clip size to 16 bits
+        if (unsigned(dp_out_s(2*C_SIGNAL_WIDTH+clog2(C_KERNEL_SIZE)-1 downto C_SIGNAL_WIDTH))) > 0 then     -- fix range
+            dp_out_s_tmp <= (others => '1');                                                                -- set to all 1's
+            dp_out_clipped_s <= dp_out_s_tmp(C_SIGNAL_WIDTH-1 downto 0);                                    -- clip size to 16 bits
         else
             dp_out_clipped_s <= dp_out_s(C_SIGNAL_WIDTH-1 downto 0);
         end if;

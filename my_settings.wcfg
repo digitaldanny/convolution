@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="wrapper_tb_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="config_pkg" />
+            <top_module name="math_custom" />
+            <top_module name="user_pkg" />
+            <top_module name="wrapper_tb" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="3985833333fs"></ZoomStartTime>
+      <ZoomEndTime time="4632833334fs"></ZoomEndTime>
+      <Cursor1Time time="4525000000fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="222"></NameColumnWidth>
+      <ValueColumnWidth column_width="106"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="10" />
+   <wvobject type="group" fp_name="group102">
+      <obj_property name="label">default</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="array" fp_name="/wrapper_tb/clks">
+         <obj_property name="ElementShortName">clks[3:0]</obj_property>
+         <obj_property name="ObjectShortName">clks[3:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/wrapper_tb/rst">
+         <obj_property name="ElementShortName">rst</obj_property>
+         <obj_property name="ObjectShortName">rst</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/wrapper_tb/mmap_wr_en">
+         <obj_property name="ElementShortName">mmap_wr_en</obj_property>
+         <obj_property name="ObjectShortName">mmap_wr_en</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/wrapper_tb/mmap_wr_addr">
+         <obj_property name="ElementShortName">mmap_wr_addr[17:0]</obj_property>
+         <obj_property name="ObjectShortName">mmap_wr_addr[17:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/wrapper_tb/mmap_wr_data">
+         <obj_property name="ElementShortName">mmap_wr_data[31:0]</obj_property>
+         <obj_property name="ObjectShortName">mmap_wr_data[31:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/wrapper_tb/mmap_rd_en">
+         <obj_property name="ElementShortName">mmap_rd_en</obj_property>
+         <obj_property name="ObjectShortName">mmap_rd_en</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/wrapper_tb/mmap_rd_addr">
+         <obj_property name="ElementShortName">mmap_rd_addr[17:0]</obj_property>
+         <obj_property name="ObjectShortName">mmap_rd_addr[17:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/wrapper_tb/mmap_rd_data">
+         <obj_property name="ElementShortName">mmap_rd_data[31:0]</obj_property>
+         <obj_property name="ObjectShortName">mmap_rd_data[31:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/wrapper_tb/sim_done">
+         <obj_property name="ElementShortName">sim_done</obj_property>
+         <obj_property name="ObjectShortName">sim_done</obj_property>
+      </wvobject>
+      <wvobject type="other" fp_name="/wrapper_tb/TEST_SIZE">
+         <obj_property name="ElementShortName">TEST_SIZE</obj_property>
+         <obj_property name="ObjectShortName">TEST_SIZE</obj_property>
+      </wvobject>
+      <wvobject type="other" fp_name="/wrapper_tb/DMA_SIZE">
+         <obj_property name="ElementShortName">DMA_SIZE</obj_property>
+         <obj_property name="ObjectShortName">DMA_SIZE</obj_property>
+      </wvobject>
+      <wvobject type="other" fp_name="/wrapper_tb/MAX_CYCLES">
+         <obj_property name="ElementShortName">MAX_CYCLES</obj_property>
+         <obj_property name="ObjectShortName">MAX_CYCLES</obj_property>
+      </wvobject>
+      <wvobject type="other" fp_name="/wrapper_tb/CLK0_HALF_PERIOD">
+         <obj_property name="ElementShortName">CLK0_HALF_PERIOD</obj_property>
+         <obj_property name="ObjectShortName">CLK0_HALF_PERIOD</obj_property>
+      </wvobject>
+      <wvobject type="other" fp_name="/wrapper_tb/C_MMAP_CYCLES">
+         <obj_property name="ElementShortName">C_MMAP_CYCLES</obj_property>
+         <obj_property name="ObjectShortName">C_MMAP_CYCLES</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="logic" fp_name="/wrapper_tb/clk0">
+      <obj_property name="ElementShortName">clk0</obj_property>
+      <obj_property name="ObjectShortName">clk0</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/wrapper_tb/clk1">
+      <obj_property name="ElementShortName">clk1</obj_property>
+      <obj_property name="ObjectShortName">clk1</obj_property>
+   </wvobject>
+   <wvobject type="group" fp_name="group100">
+      <obj_property name="label">ram0_rd</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="logic" fp_name="/wrapper_tb/UUT/U_USER_APP/ram0_rd_go">
+         <obj_property name="ElementShortName">ram0_rd_go</obj_property>
+         <obj_property name="ObjectShortName">ram0_rd_go</obj_property>
+         <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/wrapper_tb/UUT/U_USER_APP/ram0_rd_valid">
+         <obj_property name="ElementShortName">ram0_rd_valid</obj_property>
+         <obj_property name="ObjectShortName">ram0_rd_valid</obj_property>
+         <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/wrapper_tb/UUT/U_USER_APP/ram0_rd_data">
+         <obj_property name="ElementShortName">ram0_rd_data[15:0]</obj_property>
+         <obj_property name="ObjectShortName">ram0_rd_data[15:0]</obj_property>
+         <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/wrapper_tb/UUT/U_USER_APP/ram0_rd_addr">
+         <obj_property name="ElementShortName">ram0_rd_addr[14:0]</obj_property>
+         <obj_property name="ObjectShortName">ram0_rd_addr[14:0]</obj_property>
+         <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/wrapper_tb/UUT/U_USER_APP/ram0_rd_done">
+         <obj_property name="ElementShortName">ram0_rd_done</obj_property>
+         <obj_property name="ObjectShortName">ram0_rd_done</obj_property>
+         <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group23">
+      <obj_property name="label">dp_valid</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="array" fp_name="/wrapper_tb/UUT/U_USER_APP/U_VALID_DP/input">
+         <obj_property name="ElementShortName">input[0:0]</obj_property>
+         <obj_property name="ObjectShortName">input[0:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FF0000</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+         <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/wrapper_tb/UUT/U_USER_APP/U_VALID_DP/output">
+         <obj_property name="ElementShortName">output[0:0]</obj_property>
+         <obj_property name="ObjectShortName">output[0:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FF0000</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+         <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group20">
+      <obj_property name="label">datapath</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="logic" fp_name="/wrapper_tb/UUT/U_USER_APP/dp_en">
+         <obj_property name="ElementShortName">dp_en</obj_property>
+         <obj_property name="ObjectShortName">dp_en</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/wrapper_tb/UUT/U_USER_APP/U_DATAPATH/input1">
+         <obj_property name="ElementShortName">input1[95:0]</obj_property>
+         <obj_property name="ObjectShortName">input1[95:0]</obj_property>
+         <obj_property name="CustomSignalColor">#00FF7F</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/wrapper_tb/UUT/U_USER_APP/U_DATAPATH/input2">
+         <obj_property name="ElementShortName">input2[95:0]</obj_property>
+         <obj_property name="ObjectShortName">input2[95:0]</obj_property>
+         <obj_property name="CustomSignalColor">#00FF7F</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/wrapper_tb/UUT/U_USER_APP/U_DATAPATH/output">
+         <obj_property name="ElementShortName">output[34:0]</obj_property>
+         <obj_property name="ObjectShortName">output[34:0]</obj_property>
+         <obj_property name="CustomSignalColor">#00FF7F</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group94">
+      <obj_property name="label">ram1_wr</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="logic" fp_name="/wrapper_tb/UUT/U_USER_APP/ram1_wr_go">
+         <obj_property name="ElementShortName">ram1_wr_go</obj_property>
+         <obj_property name="ObjectShortName">ram1_wr_go</obj_property>
+         <obj_property name="CustomSignalColor">#A52A2A</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/wrapper_tb/UUT/U_USER_APP/ram1_wr_ready">
+         <obj_property name="ElementShortName">ram1_wr_ready</obj_property>
+         <obj_property name="ObjectShortName">ram1_wr_ready</obj_property>
+         <obj_property name="CustomSignalColor">#A52A2A</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/wrapper_tb/UUT/U_USER_APP/ram1_wr_valid">
+         <obj_property name="ElementShortName">ram1_wr_valid</obj_property>
+         <obj_property name="ObjectShortName">ram1_wr_valid</obj_property>
+         <obj_property name="CustomSignalColor">#A52A2A</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/wrapper_tb/UUT/U_USER_APP/ram1_wr_addr">
+         <obj_property name="ElementShortName">ram1_wr_addr[14:0]</obj_property>
+         <obj_property name="ObjectShortName">ram1_wr_addr[14:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#A52A2A</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/wrapper_tb/UUT/U_USER_APP/ram1_wr_data">
+         <obj_property name="ElementShortName">ram1_wr_data[15:0]</obj_property>
+         <obj_property name="ObjectShortName">ram1_wr_data[15:0]</obj_property>
+         <obj_property name="CustomSignalColor">#A52A2A</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/wrapper_tb/UUT/U_USER_APP/ram1_wr_done">
+         <obj_property name="ElementShortName">ram1_wr_done</obj_property>
+         <obj_property name="ObjectShortName">ram1_wr_done</obj_property>
+         <obj_property name="CustomSignalColor">#A52A2A</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="group" fp_name="group189">
+         <obj_property name="label">sig_buffer</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject type="logic" fp_name="/wrapper_tb/UUT/U_USER_APP/U_SIG_BUFF/rd_en">
+            <obj_property name="ElementShortName">rd_en</obj_property>
+            <obj_property name="ObjectShortName">rd_en</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/wrapper_tb/UUT/U_USER_APP/U_SIG_BUFF/wr_en">
+            <obj_property name="ElementShortName">wr_en</obj_property>
+            <obj_property name="ObjectShortName">wr_en</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/wrapper_tb/UUT/U_USER_APP/U_SIG_BUFF/full">
+            <obj_property name="ElementShortName">full</obj_property>
+            <obj_property name="ObjectShortName">full</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/wrapper_tb/UUT/U_USER_APP/U_SIG_BUFF/full_s">
+            <obj_property name="ElementShortName">full_s</obj_property>
+            <obj_property name="ObjectShortName">full_s</obj_property>
+         </wvobject>
+         <wvobject type="logic" fp_name="/wrapper_tb/UUT/U_USER_APP/U_SIG_BUFF/empty">
+            <obj_property name="ElementShortName">empty</obj_property>
+            <obj_property name="ObjectShortName">empty</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/wrapper_tb/UUT/U_USER_APP/U_SIG_BUFF/input">
+            <obj_property name="ElementShortName">input[15:0]</obj_property>
+            <obj_property name="ObjectShortName">input[15:0]</obj_property>
+            <obj_property name="Radix">HEXRADIX</obj_property>
+         </wvobject>
+         <wvobject type="array" fp_name="/wrapper_tb/UUT/U_USER_APP/U_SIG_BUFF/output">
+            <obj_property name="ElementShortName">output[95:0]</obj_property>
+            <obj_property name="ObjectShortName">output[95:0]</obj_property>
+            <obj_property name="Radix">HEXRADIX</obj_property>
+         </wvobject>
+      </wvobject>
+   </wvobject>
+   <wvobject type="logic" fp_name="/wrapper_tb/UUT/U_USER_APP/sb_empty_s">
+      <obj_property name="ElementShortName">sb_empty_s</obj_property>
+      <obj_property name="ObjectShortName">sb_empty_s</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/wrapper_tb/UUT/U_USER_APP/sb_full_s">
+      <obj_property name="ElementShortName">sb_full_s</obj_property>
+      <obj_property name="ObjectShortName">sb_full_s</obj_property>
+   </wvobject>
+   <wvobject type="group" fp_name="group285">
+      <obj_property name="label">kern_buffer</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="logic" fp_name="/wrapper_tb/UUT/U_USER_APP/kernel_loaded_s">
+         <obj_property name="ElementShortName">kernel_loaded_s</obj_property>
+         <obj_property name="ObjectShortName">kernel_loaded_s</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/wrapper_tb/UUT/U_USER_APP/U_KERN_BUFF/input">
+         <obj_property name="ElementShortName">input[15:0]</obj_property>
+         <obj_property name="ObjectShortName">input[15:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/wrapper_tb/UUT/U_USER_APP/U_KERN_BUFF/output">
+         <obj_property name="ElementShortName">output[95:0]</obj_property>
+         <obj_property name="ObjectShortName">output[95:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/wrapper_tb/UUT/U_USER_APP/done">
+         <obj_property name="ElementShortName">done</obj_property>
+         <obj_property name="ObjectShortName">done</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/wrapper_tb/UUT/U_USER_APP/go">
+         <obj_property name="ElementShortName">go</obj_property>
+         <obj_property name="ObjectShortName">go</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/wrapper_tb/UUT/U_USER_APP/ram0_rd_go">
+         <obj_property name="ElementShortName">ram0_rd_go</obj_property>
+         <obj_property name="ObjectShortName">ram0_rd_go</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/wrapper_tb/UUT/U_USER_APP/ram1_wr_go">
+         <obj_property name="ElementShortName">ram1_wr_go</obj_property>
+         <obj_property name="ObjectShortName">ram1_wr_go</obj_property>
+      </wvobject>
+   </wvobject>
+</wave_config>
