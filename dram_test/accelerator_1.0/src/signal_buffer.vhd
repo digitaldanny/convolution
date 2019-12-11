@@ -12,7 +12,6 @@ entity signal_buffer is
     port( 
         clk      : in std_logic;
         rst      : in std_logic;
-        en       : in std_logic;
         rd_en    : in std_logic;
         wr_en    : in std_logic;
         full     : out std_logic;
@@ -50,13 +49,15 @@ begin
 
         elsif (rising_edge(clk)) then
 
-            if (en = '1') then
+            -- reads data into buffer and shifts
+            -- if wr_en and rd_en asserted, wr_en gets priority 
+            if (wr_en = '1') then
 
-                -- reads data into buffer and shifts
-                if (wr_en = '1' and (count < to_unsigned(size, width))) then -- TODO double check width is correct
-
-                    empty_s <= '1'; -- not full
+                -- count is less that size, so update count and shift elements
+                if (count < to_unsigned(size, max_bits)) then
                     count <= count + 1;
+                    empty_s <= '1'; -- not full
+                    full_s <= '0';
 
                     -- input goes to first array element
                     output_array(0) <= input;
@@ -66,33 +67,37 @@ begin
                         output_array(i+1) <= output_array(i);
                     end loop;
 
-                elsif (rd_en = '1' and (count = to_unsigned(size, max_bits))) then
+                -- count == 128
+                elsif (count = to_unsigned(size, max_bits)) then
+                    empty_s <= '0';
+                    full_s <= '1';
 
+                end if;
+
+            elsif (rd_en = '1') then
+                if (count <= to_unsigned(size, max_bits)) then
                     -- decrement since we can read 1 more element
                     count <= count - 1;
                     empty_s <= '1';
                     full_s <= '0';
-
-                elsif (count = to_unsigned(size, max_bits)) then
-
-                    empty_s <= '0';
-                    full_s <= '1'; -- count == 128
-                    
                 end if;
             end if;
         end if;
     end process;
 
-
-    -- smart buffer is full, ready to send window
-    full <= full_s and not(rd_en);
-    --full <= full_s;
     empty <= empty_s;
+
+    -- if rd_en is asserted, then buffer will never be full since
+    -- it reads and writes a window in the same cycle
+    full <= full_s and not(rd_en); 
     
+
+
+
     -- vectorize array because datapath needs std_logic_vector
     U_OUTPUT_VECTOR : for i in 0 to size-1 generate
-            -- stores entire window
-            output((i+1)*width-1 downto i*width) <= output_array(i);
+        -- stores entire window
+        output((i+1)*width-1 downto i*width) <= output_array(i);
     end generate;
 
 end STR;

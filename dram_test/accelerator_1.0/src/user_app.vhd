@@ -154,8 +154,8 @@ begin
             go            => go,
             mem_in_go     => ram0_rd_go,
             --ram0_rd_done => ram0_rd_done, I don't think this is needed
-            ram0_rd_addr  => ram0_rd_addr,
-            ram1_wr_addr  => ram1_wr_addr,
+            --ram0_rd_addr  => ram0_rd_addr,
+            --ram1_wr_addr  => ram1_wr_addr,
             mem_out_go    => ram1_wr_go,
             mem_in_clear  => ram0_rd_clear,
             mem_out_clear => ram1_wr_clear,
@@ -200,7 +200,6 @@ begin
         port map( 
             clk => clks(C_CLK_USER),
             rst => rst,
-            en => '1', -- TODO may need to change later
             rd_en => sb_rd_en_s,
             wr_en => sb_wr_en_s,
             full => sb_full_s,
@@ -219,7 +218,6 @@ begin
         port map( 
             clk => clks(C_CLK_USER),
             rst => rst,
-            en => '1',
             rd_en => kernel_rd_en_s,
             wr_en => kernel_load_s, -- causes a shift by one inside buffer
             full => kernel_full_s,
@@ -256,8 +254,8 @@ begin
             clk => clks(C_CLK_USER),
             rst => rst,
             en => dp_en, -- stalls the pipeline if output RAM is not ready
-            input1 => sb_out_s,
-            input2 => kernel_out_s,
+            input1 => kernel_out_s,
+            input2 => sb_out_s,
             output => dp_out_s);
       
 

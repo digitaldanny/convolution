@@ -122,7 +122,7 @@ begin
         addr_count := 0;
 
        -- pad 1's at the beginning of signal
-       for i in 0 to (C_KERNEL_SIZE/2)-1 loop
+       for i in 0 to DMA_SIZE-1 loop
            mmap_wr_addr <= std_logic_vector(to_unsigned(i, C_MMAP_ADDR_WIDTH));
            mmap_wr_en   <= '1';
            mmap_wr_data <= std_logic_vector(to_unsigned(1, C_MMAP_DATA_WIDTH/2) & to_unsigned(1, C_MMAP_DATA_WIDTH/2));
